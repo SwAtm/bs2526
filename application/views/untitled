@@ -1,0 +1,11 @@
+<html>
+<body>
+<form onsubmit = "return chkdt();" action = "tran_report" method = "Post">
+<table border = 1 align = "center">
+<?php echo validation_errors();
+?>
+<tr>
+<td colspan = 4 align = "right"><label for = "frdate">From</label></td>
+<td><input type = "date" required id = "frdate" name = "frdate" value = "<?php echo Date('Y-m-d')?>"></td>
+<td colspan = 4 align = "right"><label for = "todate">To</label></td>
+<td colspan = 4 align = "right"><input type = "date" required id = "todate" name  = "todate" value = "<?php echo Date('Y-m-d')?>"> </td></tr>

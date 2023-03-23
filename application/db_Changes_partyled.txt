@@ -1,0 +1,142 @@
+New field in party - ob dec 11,2
+
+
+
+		$sql = "select sum(t.expenses) as texpenses, sum(d.salepr) as salepr, sum(d.purchsr) as purchsr, t.partyid, t.name, t.city
+		from 
+		(select trns_summary.expenses, party.id as partyid, party.name, party.city from trns_summary
+		join party on
+		party.id = trns_summary.party_id 
+		join series on
+		series.series = trns_summary.series
+		where series.location_name = \"Fort Ashrama\") as t
+		join
+		(select round(sum(if(series.tran_type_name = \"Sales\" or series.tran_type_name=\"Purchase Return\", (((td.rate-cash_disc)*td.quantity)-(((td.rate-cash_disc)*td.quantity)*discount/100)),0)),2) as salepr, 
+		round(sum(if(series.tran_type_name = \"Purchase\" or series.tran_type_name=\"Sale Return\", (((td.rate-cash_disc)*td.quantity)-(((td.rate-cash_disc)*td.quantity)*discount/100)),0)),2) as purchsr, 
+		from trns_summary as trs
+		join trns_details as td on trs.id = td.trns_summary_id
+		join series on series.series = trs.series
+		group by trs.id) as d
+		on t.id = d.id 
+		group by t.partyid";
+
+
+		select a.partyid, a.name, a.city, a.obl, a.texpenses, a.salepr, a.purchsr, b.rpt, b.pmt from
+		(select t.partyid, t.name, t.city, t.obl, sum(t.expenses) as texpenses, sum(d.salepr) as salepr, sum(d.purchsr) as purchsr 
+		from 
+		(select trns_summary.id, trns_summary.expenses, party.id as partyid, party.name, party.city, party.obl from trns_summary
+		join party on
+		party.id = trns_summary.party_id 
+		join series on
+		series.series = trns_summary.series
+		where series.location_name = 'Fort Ashrama') as t
+		join
+		(select trs.id, round(sum(if(series.tran_type_name = 'Sales' or series.tran_type_name='Purchase Return', (((td.rate-cash_disc)*td.quantity)-(((td.rate-cash_disc)*td.quantity)*discount/100)),0)),2) as salepr, 
+		round(sum(if(series.tran_type_name = 'Purchase' or series.tran_type_name='Sale Return', (((td.rate-cash_disc)*td.quantity)-(((td.rate-cash_disc)*td.quantity)*discount/100)),0)),2) as purchsr
+		from trns_summary as trs
+		join trns_details as td on trs.id = td.trns_summary_id
+		join series on series.series = trs.series
+		group by trs.id) as d
+		on t.id = d.id 
+		group by t.partyid ) as a left join
+		(select party_trans.party_id as id, round(sum(if(party_trans.type = 'rct',amount,0)),2) as rpt, round(sum(if(party_trans.type != 'rct',amount,0)),2) as pmt from party_trans
+		group by party_trans.party_id) as b
+		on a.partyid = b.id
+
+
+
+		select a.partyid, a.name, a.city, a.obl, a.texpenses, a.salepr, a.purchsr, b.rpt, b.pmt from
+		(select t.partyid, t.name, t.city, t.obl, t.texpenses, d.salepr, d.purchsr)
+		from 
+		(select trns_summary.id, sum(trns_summary.expenses) as texpenses, party.id as partyid, party.name, party.city, party.obl from party 
+		left join trns_summary on
+		party.id = trns_summary.party_id 
+		group by partyid) as t
+		left join
+		(select trs.id, party.id as pid, round(sum(if(series.tran_type_name = 'Sales' or series.tran_type_name='Purchase Return', (((td.rate-cash_disc)*td.quantity)-(((td.rate-cash_disc)*td.quantity)*discount/100)),0)),2) as salepr, 
+		round(sum(if(series.tran_type_name = 'Purchase' or series.tran_type_name='Sale Return', (((td.rate-cash_disc)*td.quantity)-(((td.rate-cash_disc)*td.quantity)*discount/100)),0)),2) as purchsr
+		from party join trns_summary as trs on party.id = trs.party_id
+		join trns_details as td on trs.id = td.trns_summary_id
+		join series on series.series = trs.series
+		group by pid) as d
+		on t.partyid = d.pid 
+		where t.texpenses<>0 or t.obl<>0 or d.salepr>0 or d.purchsr>0
+		) as a left join
+		(select party_trans.party_id as id, round(sum(if(party_trans.type = 'rct',amount,0)),2) as rpt, round(sum(if(party_trans.type != 'rct',amount,0)),2) as pmt from party_trans
+		group by party_trans.party_id) as b
+		on a.partyid = b.id
+
+		select a.id, a.name, a.city, a.obl, a.texpenses, b.salepr, b.purchsr, c.rpt, c.pmt from
+		(select party.id, party.name, party.city, party.obl, sum(trns_summary.expenses) as texpenses from party
+		left join trns_summary 
+		on party.id = trns_summary.party_id
+		group by party.id) as a
+		left join
+		(select party.id as pid, round(sum(if(series.tran_type_name = 'Sales' or series.tran_type_name='Purchase Return', (((td.rate-cash_disc)*td.quantity)-(((td.rate-cash_disc)*td.quantity)*discount/100)),0)),2) as salepr, 
+		round(sum(if(series.tran_type_name = 'Purchase' or series.tran_type_name='Sale Return', (((td.rate-cash_disc)*td.quantity)-(((td.rate-cash_disc)*td.quantity)*discount/100)),0)),2) as purchsr
+		from party join trns_summary as trs on party.id = trs.party_id
+		join trns_details as td on trs.id = td.trns_summary_id
+		join series on series.series = trs.series
+		group by pid) as b
+		on a.id=b.pid
+		left join
+		(select party_trans.party_id as partyid, round(sum(if(party_trans.type = 'rct',amount,0)),2) as rpt, round(sum(if(party_trans.type != 'rct',amount,0)),2) as pmt from party_trans
+		group by party_trans.party_id) as c
+		on a.id = c.partyid
+		where a.texpenses<>0 or b.salepr<>0 or b.purchsr<>0 or c.rpt<>0 or c.pmt<>0
+
+
+		select party.id, party.name, party.city, party.obl, sum(if(series.tran_type_name='Sales' or series.tran_type_name='Purchase return',trns_summary.expenses,0)) as salesexp, sum(if(series.tran_type_name='Purchase' or series.tran_type_name='Sales Return',trns_summary.expenses,0)) as purchexp from party
+		left join trns_summary 
+		on party.id = trns_summary.party_id
+		left join series on series.series=trns_summary.series
+		group by party.id
+		where party.obl<>0 or salesexp<>0 or purchexp<>0
+
+
+		select a.id, a.name, a.city, a.obl, a.salesexp, a.purchexp, b.salepr, b.purchsr, c.rpt, c.pmt from
+		(select party.id, party.name, party.city, party.obl, sum(if(series.tran_type_name='Sales' or series.tran_type_name='Purchase return',trns_summary.expenses,0)) as salesexp, sum(if(series.tran_type_name='Purchase' or series.tran_type_name='Sales Return',trns_summary.expenses,0)) as purchexp from party
+		left join trns_summary 
+		on party.id = trns_summary.party_id
+		left join series on series.series=trns_summary.series
+		group by party.id) as a
+		left join
+		(select party.id as pid, round(sum(if(series.tran_type_name = 'Sales' or series.tran_type_name='Purchase Return', (((td.rate-cash_disc)*td.quantity)-(((td.rate-cash_disc)*td.quantity)*discount/100)),0)),2) as salepr, 
+		round(sum(if(series.tran_type_name = 'Purchase' or series.tran_type_name='Sale Return', (((td.rate-cash_disc)*td.quantity)-(((td.rate-cash_disc)*td.quantity)*discount/100)),0)),2) as purchsr
+		from party join trns_summary as trs on party.id = trs.party_id
+		join trns_details as td on trs.id = td.trns_summary_id
+		join series on series.series = trs.series
+		group by pid) as b
+		on a.id=b.pid
+		left join
+		(select party_trans.party_id as partyid, round(sum(if(party_trans.type = 'rct',amount,0)),2) as rpt, round(sum(if(party_trans.type != 'rct',amount,0)),2) as pmt from party_trans
+		group by party_trans.party_id) as c
+		on a.id = c.partyid
+		where a.salesexp<>0 or a.purchexp<>0 or b.salepr<>0 or b.purchsr<>0 or c.rpt<>0 or c.pmt<>0
+
+
+		select a.id, a.name, a.city, a.obl, b.salesexp, b.purchexp, c.salepr, c.purchsr, d.rpt, d.pmt from
+		(select party.id, party.name, party.city, party.obl from party) as a
+		left join
+		(select trns_summary.party_id, sum(if(series.tran_type_name='Sales' or series.tran_type_name='Purchase return',trns_summary.expenses,0)) as salesexp, sum(if(series.tran_type_name='Purchase' or series.tran_type_name='Sales Return',trns_summary.expenses,0)) as purchexp from party
+		join trns_summary 
+		on party.id = trns_summary.party_id
+		left join series on series.series=trns_summary.series
+		where series.location_name='Fort Ashrama'
+		group by party.id) as b
+		on a.id = b.party_id
+		left join
+		(select party.id as pid, round(sum(if(series.tran_type_name = 'Sales' or series.tran_type_name='Purchase Return', (((td.rate-cash_disc)*td.quantity)-(((td.rate-cash_disc)*td.quantity)*discount/100)),0)),2) as salepr, 
+		round(sum(if(series.tran_type_name = 'Purchase' or series.tran_type_name='Sale Return', (((td.rate-cash_disc)*td.quantity)-(((td.rate-cash_disc)*td.quantity)*discount/100)),0)),2) as purchsr
+		from party join trns_summary as trs on party.id = trs.party_id
+		join trns_details as td on trs.id = td.trns_summary_id
+		join series on series.series = trs.series
+		group by pid) as c
+		on a.id=c.pid
+		left join
+		(select party_trans.party_id as partyid, round(sum(if(party_trans.type = 'rct',amount,0)),2) as rpt, round(sum(if(party_trans.type != 'rct',amount,0)),2) as pmt from party_trans
+		group by party_trans.party_id) as d
+		on a.id = d.partyid
+		where a.obl<>0 or b.salesexp<>0 or b.purchexp<>0 or c.salepr<>0 or c.purchsr<>0 or d.rpt<>0 or d.pmt<>0
+		
+		
