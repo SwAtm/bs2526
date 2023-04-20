@@ -93,7 +93,8 @@ class Inventory_model extends CI_Model{
 		//$this->db->where('item.id',$id);
 		$this->db->where('invent.location_id', $this->session->loc_id);
 		$this->db->group_by('item.code, invent.myprice');
-		$this->db->order_by('invent.item_id ASC, myprice ASC');
+		//$this->db->order_by('invent.item_id ASC, myprice ASC');
+		$this->db->order_by('item.title ASC, myprice ASC');
 		$sql = $this->db->get();
 		return $sql->result_array();
 		//return $stock;
