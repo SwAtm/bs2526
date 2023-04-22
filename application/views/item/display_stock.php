@@ -1,24 +1,33 @@
-<?php
-
-$countstck = count($stock);
-if (0 == $countstck):
-	echo "This Item has no stock<br>";
-else:
-	$template = array(
-        'table_open' => '<table border="1" cellpadding="2" cellspacing="1" class="mytable" align="center">'
-);
-
-$this->table->set_template($template);
-	//$this->table->set_caption($stock[0]['title']);
-	$this->table->set_heading('Item Id','Title','Rate','Closing Balance','');
-
+<html>
+<style>
+table thead {
+position: sticky;
+top: 0;
+background: pink;
+}
+table tfoot {
+position: sticky;
+bottom: 0;
+background: pink;
+}
+</style>
+<table style="width:100%; border-collapse:collapse" border=1></style>
+<thead>
+<tr align=left><th>Item Id</th><th>Title</th><th>Rate</th><th>Cl Bal</th><th></th></tr>
+</th></tr>
+</thead>
+<?php	
+//echo "<a href =".site_url('item/item').">Item List</a href>";
 	foreach ($stock as $st):
-		$extra_col = "<a href =".site_url("item/det_stck/$st[id]/$st[myprice]").">View Details</a href>";
-		$row_to_add = array($st['id'], $st['title'], number_format($st['rate'],2,'.',','), $st['clbal'], $extra_col);
-		$this->table->add_row($row_to_add);
+	$extra_col = "<a href =".site_url("item/det_stck/$st[id]/$st[myprice]").">View Details</a href>";
+	echo "<tr><td>$st[id]</td><td>$st[title]</td><td>".number_format($st['rate'],2,'.',',')."</td><td>$st[clbal]</td><td>$extra_col</td></tr>";
 	endforeach;
-	echo $this->table->generate();
-endif;	
-echo "<a href =".site_url('item/item').">Item List</a href>";
-
 ?>
+<tfoot>
+<tr align=center><th colspan=5><?php echo "<a href =".site_url('item/item').">Item List</a href>";?></th></tr>
+</tfoot>
+
+<?php
+echo "</table>";
+?>
+</html>
