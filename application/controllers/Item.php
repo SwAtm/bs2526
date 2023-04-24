@@ -53,6 +53,7 @@ class Item extends CI_Controller{
 					$crud->field_type('cat_id', 'readonly');
 					$crud->field_type('code', 'readonly');
 					$crud->field_type('party_id', 'readonly');
+					$crud->callback_before_update(array($this,'toupper'));
 				else:
 					$crud->required_fields('cat_id','title','party_id','gcat_id','gstrate','rcm');
 					$crud->callback_before_update(array($this,'toupper'));
@@ -96,8 +97,8 @@ class Item extends CI_Controller{
 
 	public function toupper($post_array)
 	{
-	$post_array['code']=strtoupper($post_array['code']);
-	$post_array['title']=strtoupper($post_array['title']);
+	$post_array['code']=strtoupper(preg_replace('/[^a-zA-Z0-9_ -]/s', '', $post_array['code']));
+	$post_array['title']=strtoupper(preg_replace('/[^a-zA-Z0-9_ -]/s', '', $post_array['title']));
 	return $post_array;
 	
 	}
