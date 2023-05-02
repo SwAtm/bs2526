@@ -18,7 +18,7 @@ $pdf->AddPage();
 $pdf->SetFont('Arial','B',14);
 //$pdf->Image(base_url(IMGPATH.'logo.jpg'),10,10,15,'');
 $pdf->setXY(0,10);
-$pdf->Cell(190,5,'Ramakrishna Mission Ashrama - '.$this->session->loc_name,0,1,'C');
+$pdf->Cell(190,5,$this->session->cname.' - '.$this->session->loc_name,0,1,'C');
 $pdf->ln(2);
 $pdf->cell(190,0,'',1,1);
 $pdf->ln(5);

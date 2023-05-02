@@ -14,7 +14,7 @@ class Location_model extends CI_Model{
 	}
 	
 	public function getdetails($id){
-	//called by Welcome/start
+	//called by Welcome/start, verify
 	$sql=$this->db->select('*');
 	$sql=$this->db->from('locations');
 	$sql=$this->db->where('id',$id);
