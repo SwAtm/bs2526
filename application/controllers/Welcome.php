@@ -11,6 +11,7 @@ class Welcome extends CI_Controller {
 		$this->load->database();
 		$this->load->helper('url');
 		$this->load->model('Location_model');
+		$this->load->model('Company_model');
 		$this->load->helper('form');
 		$this->load->library('form_validation');
 		$this->load->library('session');
@@ -40,9 +41,17 @@ class Welcome extends CI_Controller {
 			else:
 		$id=$_POST['user'];
 		$user=$this->Location_model->getdetails($id);
+		$company=$this->Company_model->getall();
 		$this->session->loc_id=$user['id'];
 		$this->session->loc_name=$user['name'];
 		$this->session->loc_auto_bill_no=$user['auto_bill_no'];
+		$this->session->cname=$company['name'];
+		$this->session->caddress=$company['address'];
+		$this->session->ccity=$company['city'];
+		$this->session->cemail=$company['email'];
+		$this->session->cgst=$company['gst'];
+		$this->session->csdate=$company['sdate'];
+		$this->session->cedate=$company['edate'];
 		$this->home();
 			endif;
 		endif;

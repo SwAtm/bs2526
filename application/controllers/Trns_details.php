@@ -24,7 +24,10 @@ class Trns_details extends CI_Controller{
 
 
 public function purch_add_details(){
-	
+		
+	if (time()<=strtotime($this->session->csdate) or time()>=strtotime($this->session->cedate)):	
+	die("Today's date is out of range"."<a href =".site_url('welcome/home')."> go home</a>");
+	endif;	
 	
 	if (!isset($_POST)||empty($_POST)):
 		//unsubmitted
@@ -183,6 +186,9 @@ public function purch_add_details(){
 
 
 		public function sales_add_details(){
+		if (time()<=strtotime($this->session->csdate) or time()>=strtotime($this->session->cedate)):	
+		die("Today's date is out of range"."<a href =".site_url('welcome/home')."> go home</a>");
+		endif;	
 		//unsubmitted
 		if (!isset($_POST)||empty($_POST)):			
 			

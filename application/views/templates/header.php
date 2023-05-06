@@ -22,7 +22,7 @@ div {
 <body>
 <?php
 echo "<table width=100%  bgcolor=lightblue cellpadding=5>";
-echo "<tr><td align=middle><b>Ramakrishna Mission Ashrama, Belgaum</b></td></tr>";
+echo "<tr><td align=middle><b>".$this->session->cname." ".$this->session->ccity."</b></td></tr>";
 echo "<tr><td align=middle>".date('l jS \of F Y h:i:s A')."</td></tr>";
 if (isset($this->session->loc_id)||!empty($this->session->loc_id)):
 //if ((!null == LOC_NAME)||!empty(LOC_NAME)):
