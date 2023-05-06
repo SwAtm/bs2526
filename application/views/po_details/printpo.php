@@ -15,7 +15,7 @@ $pdf->Cell(190,5,$this->session->cname,0,1,'C');
 $pdf->SetFont('Arial','',14);
 $pdf->Cell(190,5,$this->session->ccity,0,1,'C');
 $pdf->SetFont('Arial','',12);
-$pdf->Cell(190,5,'Ph: 0831 2432789 / 2970320 / 321 :: email: belgaum@rkmm.org',0,1,'C');
+$pdf->Cell(190,5,'Ph: '.$this->session->cphone.' :: email: '.$this->session->cemail,0,1,'C');
 $pdf->ln(2);
 //$pdf->cell(190,0,'',1,1);
 //$pdf->ln(5);

@@ -25,7 +25,7 @@ $pdf->Image(base_url(IMGPATH.'logo.jpg'),20,10,15,'');
 $pdf->setLeftMargin(20);
 $pdf->Cell(180,5,$this->session->cname,0,1,'C');
 $pdf->SetFont('Arial','',12);
-$pdf->Cell(180,5,$this->session->cname.' :: Ph: 0831 2432789 / 2970320 / 321',0,1,'C');
+$pdf->Cell(180,5,$this->session->cname.' :: Ph: '.$this->session->cphone.,0,1,'C');
 $pdf->SetFont('Arial','',12);
 $pdf->ln(5);
 $tnetsales=$tprofit=0;

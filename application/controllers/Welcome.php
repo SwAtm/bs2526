@@ -52,6 +52,7 @@ class Welcome extends CI_Controller {
 		$this->session->cgst=$company['gst'];
 		$this->session->csdate=$company['sdate'];
 		$this->session->cedate=$company['edate'];
+		$this->session->cphone=$company['phone'];
 		$this->home();
 			endif;
 		endif;
