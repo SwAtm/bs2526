@@ -27,13 +27,31 @@
 		$id = $this->uri->segment(3);
 		$data['summary']= $this->Trns_summary_model->get_details_by_id($id);
 		$data['party'] = $this->Party_model->get_details($data['summary']['party_id']);
-		$data['details'] = $this->Trns_details_model->get_details($data['summary']['id']);
+		//$data['details'] = $this->Trns_details_model->get_details($data['summary']['id']);
 		$data['location'] = $this->session->loc_name;
 		$gst = 0;
 		$data['taxamt'] = 0;
 		$data['notaxamt'] = 0;
 		$data['totamount']= 0;
 		$data['totquantity']=0;
+		$details = $this->Trns_details_model->get_details($data['summary']['id']);
+		//sum quantity in details array
+		$newdetails=array();
+		$found='n';
+		foreach ($details as $k):
+			foreach ($newdetails as $key=>$d):
+				if($k['item_id']==$d['item_id'] and $k['hsn']==$d['hsn'] and $k['rate']==$d['rate'] and $k['discount']==$d['discount'] and $k['cash_disc']==$d['cash_disc']):
+					$newdetails[$key]['quantity']+=$k['quantity'];
+					$newdetails[$key]['amount']+=$k['amount'];
+				$found='y';
+				endif;
+			endforeach;
+		if ('n'==$found):
+		$newdetails[]=$k;
+		endif;
+		$found='n';
+		endforeach;			
+		$data['details']=$newdetails;	
 		
 		//This is not reqd now. If RCM comes into effect, then this will be reqd since then in details file gst rate would have been recorded to work out RCM.
 		/*
@@ -68,7 +86,8 @@
 		if ($data['summary']['payment_mode_name'] == "UPI" and $data['summary']['tran_type_name'] == "Sales"):
 		$text = "upi://pay?pa=".   			 // payment method.
                 //"gpay-11192753290@okbizaxis".          // VPA number.
-                "373901010035580@UBIN0537390.ifsc.npci".          // VPA number.
+                //"373901010035580@UBIN0537390.ifsc.npci".          // VPA number.
+                "ramak83109@barodampay".          // VPA number.
                 "&am=".number_format($data['totamount'],2,".",",").       // this param is for fixed amount (non editable).
                 "&pn=Ramakrishna%20Mission Ashrama, Belgaum".      // to showing your name in app.
                 "&cu=INR".                  // Currency code.

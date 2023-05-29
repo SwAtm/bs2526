@@ -17,7 +17,7 @@ class Trns_details_model extends CI_Model{
 
 	public function get_details($pk){
 		//called by Trns_summary/view_details, trns_details/check_editable, reports/print_bill
-		$sql = $this->db->select('td.id, td.item_id,item.title,item.code,td.rate,td.quantity,td.discount,td.cash_disc,td.hsn,td.gst_rate,((rate-cash_disc)*quantity)-((rate-cash_disc)*quantity)*discount/100 as amount, td.trns_summary_id, td.inventory_id');
+		$sql = $this->db->select('td.id, td.item_id, td.myprice, item.title,item.code,td.rate,td.quantity,td.discount,td.cash_disc,td.hsn,td.gst_rate,((rate-cash_disc)*quantity)-((rate-cash_disc)*quantity)*discount/100 as amount, td.trns_summary_id, td.inventory_id');
 		$sql = $this->db->from('trns_details as td');
 		$sql = $this->db->join('item','item.id = td.item_id');
 		$sql = $this->db->where('td.trns_summary_id',$pk);

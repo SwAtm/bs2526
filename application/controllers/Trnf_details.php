@@ -36,43 +36,100 @@ class Trnf_details extends CI_Controller{
 				//$inventory[$k]['rate']=number_format($v['myprice']*(100+$v['gstrate'])/100,2,'.',',') ;
 				$inventory[$k]['rate']=number_format($v['myprice']*(100+$v['gstrate'])/100,'2','.',',');
 				endforeach;
+				foreach ($inventory as $k=>$v):
+					if ($v['clbal']<=0):
+					unset ($inventory[$k]);
+					endif;
+				endforeach;
 				$data['invent'] = $inventory;
 				$this->session->invent = $inventory;
 				$this->load->view('templates/header');
 				$this->load->view('trnf_details/add_details',$data);
 				$this->load->view('templates/footer');	
 			
-			elseif(isset($_POST['add'])):
-				//if a non json entity is submitted:
-				if (!is_object(json_decode($_POST['item']))):
+			//submitted to add but invalid
+			elseif(isset($_POST['add']) and (!is_object(json_decode($_POST['item'])) or ''==$_POST['quantity'] or empty($_POST['quantity']))):
+					//nothing is submitted to add untill now
+					if(!isset($this->session->send_details) or empty($this->session->send_details)):
 					unset ($_POST);
 					redirect(site_url('Trnf_details/send'));
-				endif;
-
-				//submitted to add
+					else:
+					$data['invent']=$this->session->invent;
+					$this->load->view('templates/header');
+					$this->load->view('trnf_details/add_details',$data);
+					$this->load->view('templates/footer');	
+					endif;
+				
+			//submitted to add and is valid
+			elseif(isset($_POST['add']) and is_object(json_decode($_POST['item'])) and ''!=$_POST['quantity'] and !empty($_POST['quantity'])):
 				$item = json_decode($_POST['item']);
+				
+				//choose appropriate inventory_id and corrosponding hsn
+				$selectedinv=$this->Inventory_model->select_inv($item->item_id, $item->myprice);
+				$rowcount=1;
+				$qtysold1=$qtysold=$_POST['quantity'];
+				foreach ($selectedinv as $inv):
+					//at last row
+					if($rowcount==count($selectedinv)):
+						$item->id=$inv['id'];
+						$_POST['quantity']=$qtysold;
+					//not at last row but existing clbal is > sold quantity
+					elseif($qtysold<=$inv['clbal']):	
+						$item->id=$inv['id'];
+						$_POST['quantity']=$qtysold;
+						$qtysold=0;
+					//not at last row and exising clbal is < sold quantity. Need to add this row and move on to next.
+					else:
+						if($inv['clbal']<=0):
+							$rowcount++;
+							continue;
+						endif;
+						$item->id=$inv['id'];
+						$_POST['quantity']=$inv['clbal'];
+						$qtysold-=$inv['clbal'];
+						$rowcount++;
+					endif;
+				
+				
 				//currently submitted data
 				$details = array('inventory_id' => $item->id, 'quantity' => $_POST['quantity'],'item_id' => $item->item_id, 'myprice' => $item->myprice, 'rate' => $item->rate);
-				// firts transaction - session is empty
+				//build array to add
+				$det[] = $details;
+				//if all quantity is factored in, exit the foreach loop
+				if (0==$qtysold):
+				break;
+				endif;
+			endforeach;	
+			
+				//Add to session. firts transaction - session is empty
 				if (!isset($this->session->send_details)||empty($this->session->send_details)):
-					$det[] = $details;
+					$this->session->send_details=$det;
 				else:
 				//pull frm session
-					$det = $this->session->send_details;
-					$det[] = $details;
+					$det1 = $this->session->send_details;
+					foreach ($det as $d):
+					$det1[]=$d;
+					endforeach;
+					$this->session->send_details=$det1;
 				endif;
-				$this->session->send_details = $det;
-				//now everything is in det and session
 				
+								
 				//need to reduce the last trnf from clbal in inventory
 				$inventory = $this->session->invent;
 				foreach ($inventory as $key => $value):
-					if ($value['id'] == $details['inventory_id']):
-					$inventory[$key]['clbal']-=$details['quantity'];
+					if ($value['item_id'] == $item->item_id and $value['myprice']==$item->myprice):
+					$inventory[$key]['clbal']-=$qtysold1;
+					endif;
+				endforeach;
+				foreach ($inventory as $key => $value):
+					if ($value['clbal']<=0):
+					unset ($inventory[$key]);
 					endif;
 				endforeach;
 				//put chgd inventory in session
 				$this->session->invent = $inventory;
+				//$this->session->send_details = $det;
+			
 				$data['invent'] = $this->session->invent;
 				$this->load->view('templates/header');
 				$this->load->view('trnf_details/add_details',$data);

@@ -56,6 +56,7 @@ echo "<input type = hidden id = item_id name = det[$i][item_id] value = $value[i
 echo "<input type = hidden id = code name = det[$i][code] value = $value[code]>";
 echo "<input type = hidden id = id name = det[$i][id] value = $value[id]>";
 echo "<input type = hidden id = inventory_id name = det[$i][inventory_id] value = $value[inventory_id]>";
+echo "<input type = hidden id = myprice name = det[$i][myprice] value = $value[myprice]>";
 $i++;
 }
 echo "<tr>";

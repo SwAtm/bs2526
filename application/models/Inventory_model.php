@@ -23,13 +23,31 @@ class Inventory_model extends CI_Model{
 	return $sql->row_array();	
 	}
 
-	public function get_list_per_loc(){
+	/*public function get_list_per_loc(){
 	//called by trns_details/sales_add_details/ trns_details/edit_sales_add, trnf_details/send, stock/add
 		$sql = $this->db->select('inventory.*, item.title, item.gstrate, item.gcat_id, item.rcm' );
 		$sql = $this->db->from('inventory');
 		$sql = $this->db->join('item','item.id = inventory.item_id');
 		$sql = $this->db->where('location_id',$this->session->loc_id);
 		$sql = $this->db->order_by('title ASC, myprice ASC, id ASC');
+		$sql=$this->db->get();
+		if ($sql and $sql->num_rows()>0):
+			return $sql->result_array();	
+		else:
+			return false;
+		endif;
+	
+	}*/
+	
+	
+	public function get_list_per_loc(){
+	//called by trns_details/sales_add_details/ trns_details/edit_sales_add, trnf_details/send, stock/add
+		$sql = $this->db->select('inventory.item_id, inventory.myprice, sum(inventory.clbal) as clbal, item.title, item.gstrate, item.gcat_id, item.rcm' );
+		$sql = $this->db->from('inventory');
+		$sql = $this->db->join('item','item.id = inventory.item_id');
+		$sql = $this->db->group_by('inventory.item_id, inventory.myprice');
+		$sql = $this->db->where('location_id',$this->session->loc_id);
+		$sql = $this->db->order_by('title ASC, myprice ASC');
 		$sql=$this->db->get();
 		if ($sql and $sql->num_rows()>0):
 			return $sql->result_array();	
@@ -158,6 +176,18 @@ class Inventory_model extends CI_Model{
 		$this->db->update('inventory');
 	}
 	
+	public function select_inv($item_id, $myprice){
+	//called by Trns_details/sales_add_details
+	$this->db->select('id, clbal, hsn');
+	$this->db->from('inventory');
+	$this->db->where('item_id',$item_id);
+	$this->db->where('myprice', $myprice);
+	$this->db->order_by('id ASC');
+	$sql=$this->db->get();
+	return $sql->result_array();
+	
+	
+	}
 	
 
 

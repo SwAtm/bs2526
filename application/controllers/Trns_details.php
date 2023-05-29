@@ -202,6 +202,12 @@ public function purch_add_details(){
 				//$inventory[$k]['rate']=number_format($v['myprice']*(100+$v['gstrate'])/100,2,'.',',') ;
 				$inventory[$k]['rate']=$v['myprice']*(100+$v['gstrate'])/100;
 			endforeach;
+			//remove 0 cl bal entries from inventory. This appears at 4 places in this file
+			foreach ($inventory as $key => $value):
+				if ($value['clbal']<=0):
+				unset ($inventory[$key]);
+				endif;
+			endforeach;
 			$data['invent'] = $inventory;
 			$this->session->invent = $inventory;
 			$this->load->view('templates/header');
@@ -214,41 +220,104 @@ public function purch_add_details(){
 			unset($_SESSION['invent']);
 			redirect (site_url('Welcome/home'));
 		
-		elseif(isset($_POST['add'])):
-		//if a non json entity is submitted:
-		if (!is_object(json_decode($_POST['item'])) or ''==$_POST['quantity'] or empty($_POST['quantity'])):
-			unset ($_POST);
-			redirect(site_url('Trns_details/sales_add_details'));
-		endif;
+		//submitted to add and is invalid:
+		elseif(isset($_POST['add']) and (!is_object(json_decode($_POST['item'])) or ''==$_POST['quantity'] or empty($_POST['quantity']))):
 		
 		
-		//submitted to add
-			$item = json_decode($_POST['item']);
+			//if no sales is recorded till now:
+			if(!$this->session->sales_details||empty($this->session->sales_details)):
+				unset ($_POST);
+				redirect(site_url('Trns_details/sales_add_details'));
+			//since some sales is recorded, we need to use inventory from session
+			else:
+				$data['details'] = $this->session->sales_details;
+				$data['invent'] = $this->session->invent;	
+				$this->load->view('templates/header');
+				$this->load->view('trns_details/sales_add_details',$data);
+				$this->load->view('templates/footer');	
+			endif;	
+		
+		
+		//submitted to add and is valid
+		elseif(isset($_POST['add']) and is_object(json_decode($_POST['item'])) and ''!=$_POST['quantity'] and !empty($_POST['quantity'])):
+		
+		
+		$item = json_decode($_POST['item']);
+		//choose appropriate inventory_id and corrosponding hsn
+		$selectedinv=$this->Inventory_model->select_inv($item->item_id, $item->myprice);
+		$rowcount=1;
+		$qtysold1=$qtysold=$_POST['quantity'];
+		foreach ($selectedinv as $inv):
+			//at last row
+			if($rowcount==count($selectedinv)):
+				$item->id=$inv['id'];
+				$item->hsn=$inv['hsn'];
+				$_POST['quantity']=$qtysold;
+			//not at last row but existing clbal is > sold quantity
+			elseif($qtysold<=$inv['clbal']):	
+				$item->id=$inv['id'];
+				$item->hsn=$inv['hsn'];
+				$_POST['quantity']=$qtysold;
+				$qtysold=0;
+			//not at last row and exising clbal is < sold quantity. Need to add this row and move on to next.
+			else:
+				if($inv['clbal']<=0):
+					$rowcount++;
+					continue;
+				endif;
+				$item->id=$inv['id'];
+				$item->hsn=$inv['hsn'];
+				$_POST['quantity']=$inv['clbal'];
+				$qtysold-=$inv['clbal'];
+				$rowcount++;
+			endif;
+				
 		//currently submitted data
 			$_POST['discount'] = $_POST['discount']==''?0:$_POST['discount'];
 			$_POST['cash_disc'] = $_POST['cash_disc']==''?0:$_POST['cash_disc'];
 			$details = array('inventory_id' => $item->id, 'item_id' => $item->item_id, 'myprice'=>$item->myprice, 'rate' => $item->rate, 'quantity' => $_POST['quantity'], 'discount' => $_POST['discount'], 'cash_disc' => $_POST['cash_disc'], 'hsn' => $item->hsn, 'gst_rate' => $item->gstrate, 'gcat_id'=>$item->gcat_id, 'rcm'=>$item->rcm, 'title' => $item->title);
-		// first transaction - session is empty
-			if (!isset($this->session->sales_details)||empty($this->session->sales_details)):
-			$det[] = $details;
-			else:
-		//pull frm session
-			$det = $this->session->sales_details;
-			$det[] = $details;
+		
+		//build an array to add
+			$det[]=$details;	
+		
+		//if all sales is factored in, exit the foreach loop
+			if (0==$qtysold):
+			break;
 			endif;
-			$this->session->sales_details = $det;
+		endforeach;	
+			//add to session
+			// first transaction - session is empty
+			if (!isset($this->session->sales_details)||empty($this->session->sales_details)):
+			$this->session->sales_details=$det;
+			else:
+		//add to session
+			$det1=$this->session->sales_details;
+			foreach ($det as $d):
+			$det1[]=$d;
+			endforeach;
+			$this->session->sales_details=$det1;
+			endif;
+			
 		//need to reduce the last sale from clbal in inventory
 			$inventory = $this->session->invent;
 			foreach ($inventory as $key => $value):
-				if ($value['id'] == $details['inventory_id']):
-				$inventory[$key]['clbal']-=$details['quantity'];
+				if ($value['item_id'] == $item->item_id and $value['myprice'] == $item->myprice):
+				$inventory[$key]['clbal']-=$qtysold1;
 				//print_r($inventory[$key]['clbal']);
+				endif;
+			endforeach;
+			//remove 0 cl bal entries from inventory. This appears at 4 places in this file
+			foreach ($inventory as $key => $value):
+				if ($value['clbal']<=0):
+				unset ($inventory[$key]);
 				endif;
 			endforeach;
 		//put chgd inventory in session
 			$this->session->invent = $inventory;
-		//now everything is in det and session
-			$data['details'] = $det;
+			//$this->session->sales_details = $det;
+			
+		//now everything is in session
+			$data['details'] = $this->session->sales_details;
 			$data['invent'] = $this->session->invent;	
 			
 			$this->load->view('templates/header');
@@ -606,10 +675,17 @@ public function purch_add_details(){
 				//add/subtract deleted quantity to/from inventory
 				foreach ($inventory as $key => $value):
 					foreach ($deleted as $dkey => $dvalue):
-						if ($value['id'] == $dvalue['inventory_id']):
+						//if ($value['id'] == $dvalue['inventory_id']):
+						if ($value['item_id'] == $dvalue['item_id'] and $value['myprice'] == $dvalue['myprice']):
 								$inventory[$key]['clbal']+= $dvalue['quantity'];
 						endif;
 					endforeach;
+				endforeach;
+				//remove 0 cl bal entries from inventory. This appears at 4 places in this file
+				foreach ($inventory as $key => $value):
+					if ($value['clbal']<=0):
+					unset ($inventory[$key]);
+					endif;
 				endforeach;
 				$data['invent'] = $inventory;
 				$this->session->invent = $data['invent'];
@@ -621,40 +697,99 @@ public function purch_add_details(){
 				unset($_SESSION['details']['retained']['tran_type_name']['trns_summary_id']['deleted']['toadd']['invent']['party_status']);
 				redirect (site_url('Welcome/home'));
 	
-			//to add
-			elseif(isset($_POST['add'])):
-				//if a non json entity is submitted:
-				if (!is_object(json_decode($_POST['item'])) or ''==$_POST['quantity'] or empty($_POST['quantity'])):
+			//submitted to add but invalid
+			elseif(isset($_POST['add']) and (!is_object(json_decode($_POST['item'])) or ''==$_POST['quantity'] or empty($_POST['quantity']))):
+				
+				//nothing is submitted to add untill now
+				if(!isset($this->session->toadd) or empty($this->session->toadd)):
 					unset ($_POST);
 					redirect(site_url('Trns_details/edit_sales_add'));
+				else:
+					$data['invent']= $this->session->invent;
+					$data['calling_proc'] = 'edit';
+					$this->load->view('templates/header');	
+					$this->load->view('trns_details/sales_add_details',$data);	
+					$this->load->view('templates/footer');		
 				endif;
 				
-				//unset($_POST['add']);
+			//submitted to add and is valid
+			elseif(isset($_POST['add']) and is_object(json_decode($_POST['item'])) and ''!=$_POST['quantity'] and !empty($_POST['quantity'])):
 				$item = json_decode($_POST['item']);
 				$_POST['discount'] = $_POST['discount']==''?0:$_POST['discount'];
 				$_POST['cash_disc'] = $_POST['cash_disc']==''?0:$_POST['cash_disc'];
+				
+				
+				
+				//choose appropriate inventory_id and corrosponding hsn
+				$selectedinv=$this->Inventory_model->select_inv($item->item_id, $item->myprice);
+				$rowcount=1;
+				$qtysold1=$qtysold=$_POST['quantity'];
+				foreach ($selectedinv as $inv):
+					//at last row
+					if($rowcount==count($selectedinv)):
+						$item->id=$inv['id'];
+						$item->hsn=$inv['hsn'];
+						$_POST['quantity']=$qtysold;
+					//not at last row but existing clbal is > sold quantity
+					elseif($qtysold<=$inv['clbal']):	
+						$item->id=$inv['id'];
+						$item->hsn=$inv['hsn'];
+						$_POST['quantity']=$qtysold;
+						$qtysold=0;
+					//not at last row and exising clbal is < sold quantity. Need to add this row and move on to next.
+					else:
+						if($inv['clbal']<=0):
+							$rowcount++;
+							continue;
+						endif;
+						$item->id=$inv['id'];
+						$item->hsn=$inv['hsn'];
+						$_POST['quantity']=$inv['clbal'];
+						$qtysold-=$inv['clbal'];
+						$rowcount++;
+					endif;
+		
+				
+				
 				//currently submitted data
 				$itemtoadd = array('inventory_id' => $item->id, 'item_id' => $item->item_id, 'myprice'=>$item->myprice, 'rate' => $item->rate, 'quantity' => $_POST['quantity'], 'discount' => $_POST['discount'], 'cash_disc' => $_POST['cash_disc'], 'hsn' => $item->hsn, 'gst_rate' => $item->gstrate, 'gcat_id'=>$item->gcat_id, 'rcm'=>$item->rcm, 'title' => $item->title);
-
+				//build an array to add
+				$toadd[]=$itemtoadd;
+				//if all sales is factored in, exit the foreach loop
+				if (0==$qtysold):
+				break;
+				endif;	
+			endforeach;
+				
 				//first entery
 				if(!isset($this->session->toadd) or empty($this->session->toadd)):
-					$toadd[] = $itemtoadd;
+					$this->session->toadd=$toadd;
 				else:
 				//subsequent entries
-					$toadd = $this->session->toadd;
-					$toadd[] = $itemtoadd;
+					$det1=$this->session->toadd;
+					foreach ($toadd as $d):
+					$det1[]=$d;
+					endforeach;
+					$this->session->toadd=$det1;
 				endif;		
-
+					
 				//need to reduce the last sale from clbal in inventory
 				$inventory = $this->session->invent;
 				foreach ($inventory as $key => $value):
-					if ($value['id'] == $itemtoadd['inventory_id']):
-						$inventory[$key]['clbal']-=$itemtoadd['quantity'];
+					if ($value['item_id'] == $item->item_id and $value['myprice'] == $item->myprice):
+						$inventory[$key]['clbal']-=$qtysold1;
+					endif;
+				endforeach;
+				//remove 0 cl bal entries from inventory. This appears at 4 places in this file
+				foreach ($inventory as $key => $value):
+					if ($value['clbal']<=0):
+					unset ($inventory[$key]);
 					endif;
 				endforeach;
 				//put chgd inventory in session
 				$this->session->invent = $inventory;
-				$this->session->toadd = $toadd;				
+				//$this->session->toadd = $toadd;				
+								
 				$data['invent']= $this->session->invent;
 				$data['calling_proc'] = 'edit';
 				$this->load->view('templates/header');	
