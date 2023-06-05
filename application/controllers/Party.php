@@ -18,7 +18,7 @@ class Party extends CI_Controller{
 		$crud = new grocery_CRUD();
 		$crud->set_table('party')
 		     ->set_subject('Party')
-			 ->columns('code', 'name', 'city', 'i_e', 'state', 'gstno')
+			 ->columns('code', 'name', 'city', 'i_e', 'state', 'gstno', 'obl')
 			 ->display_as('code','Party Code')
 			->display_as('name','Party Name')
 			->display_as('city','City')
@@ -27,6 +27,7 @@ class Party extends CI_Controller{
 			->display_as('state','State')
 			->display_as('gstno','GST No')
 			->display_as('status', 'Status')
+			->display_as('obl','Opening Balance')
 			->unique_fields(array('code'))
 			->field_type('i_e','dropdown',array('I'=>'Inter Branch', 'E'=>'External'))
 			->field_type('state_io','dropdown',array('I'=>'Inside State','O'=>'Outside State'))
