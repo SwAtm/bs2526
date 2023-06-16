@@ -147,20 +147,20 @@ $pdf->cell(276,5,'No B2C Small Invoices',0,1,'C');
 else:
 
 $pdf->cell(35,5,'Place of Supply',1,0,'L');
-$pdf->cell(16,5,'Rate of Tax',1,0,'L');
 $pdf->cell(20,5,'Taxable Amount',1,0,'L');
-$pdf->cell(20,5,'IGST',1,0,'L');
+$pdf->cell(16,5,'Rate of Tax',1,0,'L');
 $pdf->cell(20,5,'CGST',1,0,'L');
 $pdf->cell(20,5,'SGST',1,0,'L');
+$pdf->cell(20,5,'IGST',1,0,'L');
 $pdf->cell(20,5,'TOTAL',1,1,'L');
 $tamount=$igst=$cgst=$sgst=$amount=$damount=0;
 foreach ($det['b2cs'] as $de):
 		$pdf->cell(35,5,$de['party_state'],1,0,'L');
-		$pdf->cell(16,5,$de['gst_rate'],1,0,'L');
 		$pdf->cell(20,5,number_format($de['taxable'],2,'.',','),1,0,'R');
-		$pdf->cell(20,5,number_format($de['igst'],2,'.',','),1,0,'R');		
+		$pdf->cell(16,5,$de['gst_rate'],1,0,'L');
 		$pdf->cell(20,5,number_format($de['cgst'],2,'.',','),1,0,'R');
 		$pdf->cell(20,5,number_format($de['sgst'],2,'.',','),1,0,'R');
+		$pdf->cell(20,5,number_format($de['igst'],2,'.',','),1,0,'R');		
 		$damount=$de['taxable']+$de['igst']+$de['cgst']+$de['sgst'];
 		$pdf->cell(20,5,number_format($damount,2,'.',','),1,1,'R');
 		$tamount+=$de['taxable'];
@@ -172,20 +172,21 @@ foreach ($det['b2cs'] as $de):
 			//$pdf->cell(15,5,$pdf->getY(),1,1,'R');
 			$pdf->AddPage();
 			$pdf->cell(35,5,'Place of Supply',1,0,'L');
-			$pdf->cell(16,5,'Rate of Tax',1,0,'L');
 			$pdf->cell(20,5,'Taxable Amount',1,0,'L');
-			$pdf->cell(20,5,'IGST',1,0,'L');
+			$pdf->cell(16,5,'Rate of Tax',1,0,'L');
 			$pdf->cell(20,5,'CGST',1,0,'L');
 			$pdf->cell(20,5,'SGST',1,0,'L');
+			$pdf->cell(20,5,'IGST',1,0,'L');
 			$pdf->cell(20,5,'TOTAL',1,1,'L');
 		endif;
 endforeach;
 	$pdf->cell(35,5,'Total',1,0,'C');
-	$pdf->cell(16,5,'',1,0,'R');
+	//$pdf->cell(16,5,'',1,0,'R');
 	$pdf->cell(20,5,number_format($tamount,2,'.',','),1,0,'R');
-	$pdf->cell(20,5,number_format($igst,2,'.',','),1,0,'R');
+	$pdf->cell(16,5,'',1,0,'R');
 	$pdf->cell(20,5,number_format($cgst,2,'.',','),1,0,'R');
 	$pdf->cell(20,5,number_format($sgst,2,'.',','),1,0,'R');
+	$pdf->cell(20,5,number_format($igst,2,'.',','),1,0,'R');
 	$pdf->cell(20,5,number_format($amount,2,'.',','),1,1,'R');
 
 endif;
