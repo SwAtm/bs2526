@@ -17,6 +17,7 @@ class Item extends CI_Controller{
 		$this->load->model('Trnf_details_model');
 		$this->load->model('Item_model');
 		$this->load->library('session');
+		$this->load->helper('pdf_helper');
 	}
 
 	public function item()
@@ -263,6 +264,14 @@ class Item extends CI_Controller{
 		$this->load->view('templates/footer');
 		
 	}
-	
+		function printstock(){
+		$stock=$this->Inventory_model->locationwise_stock();
+		for($i=0; $i<count($stock); $i++):
+		$stock[$i]['rate']=$stock[$i]['myprice']*($stock[$i]['gstrate']+100)/100;
+		endfor;	
+		$data['stock']=$stock;
+		$this->load->view('item/printstock', $data);
+				
+		}
 
 }

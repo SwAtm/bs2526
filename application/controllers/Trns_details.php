@@ -912,6 +912,179 @@ public function purch_add_details(){
 		
 		}
 
+		public function ec(){
+		//first run
+			if (!isset($_POST)||empty($_POST)):			
+				
+				if (!$inventory = $this->Inventory_model->get_list_per_loc()):
+					//nothing in the inventory	
+					echo $this->load->view('templates/header','',true);
+					die("Sorry, Inventory is empty<br> <a href = ".site_url('welcome/home').">Go Home</a href>");
+						
+				endif;
+				foreach ($inventory as $k=>$v):
+					$inventory[$k]['rate']=$v['myprice']*(100+$v['gstrate'])/100;
+				endforeach;
+				//remove 0 cl bal entries from inventory.
+				foreach ($inventory as $key => $value):
+					if ($value['clbal']<=0):
+					unset ($inventory[$key]);
+					endif;
+				endforeach;
+				$data['invent'] = $inventory;
+				$this->session->invent = $inventory;
+				$this->load->view('templates/header');
+				$this->load->view('trns_details/ec',$data);
+
+				//cancel
+			elseif (isset($_POST['cancel'])):
+			
+				unset($_SESSION['sales_details']);
+				unset($_SESSION['invent']);
+				redirect (site_url('Welcome/home'));
+		
+			//submitted to add and is invalid:
+			elseif(isset($_POST['add']) and (!is_object(json_decode($_POST['item'])) or ''==$_POST['quantity'] or empty($_POST['quantity']))):
+		
+		
+				//if no sales is recorded till now:
+				if(!$this->session->sales_details||empty($this->session->sales_details)):
+					unset ($_POST);
+					redirect(site_url('Trns_details/ec'));
+				//since some sales is recorded, we need to use inventory from session
+				else:
+					$data['details'] = $this->session->sales_details;
+					$data['invent'] = $this->session->invent;	
+					$this->load->view('templates/header');
+					$this->load->view('trns_details/ec',$data);
+					$this->load->view('templates/footer');	
+				endif;	
+			
+			
+			//submitted to add and is valid
+			elseif(isset($_POST['add']) and is_object(json_decode($_POST['item'])) and ''!=$_POST['quantity'] and !empty($_POST['quantity'])):
+		
+		
+				$item = json_decode($_POST['item']);
+				//choose appropriate inventory_id and corrosponding hsn
+				$selectedinv=$this->Inventory_model->select_inv($item->item_id, $item->myprice);
+				$rowcount=1;
+				//quantity coming from post is the returned quantity. Sales quantity should be arrived at by subtracting returned quantity from clbal.
+				$_POST['quantity']=$item->clbal-$_POST['quantity'];
+				$qtysold1=$qtysold=$_POST['quantity'];
+				foreach ($selectedinv as $inv):
+				//at last row
+					if($rowcount==count($selectedinv)):
+						$item->id=$inv['id'];
+						$item->hsn=$inv['hsn'];
+						$_POST['quantity']=$qtysold;
+					//not at last row but existing clbal is > sold quantity
+					elseif($qtysold<=$inv['clbal']):	
+						$item->id=$inv['id'];
+						$item->hsn=$inv['hsn'];
+						$_POST['quantity']=$qtysold;
+						$qtysold=0;
+					//not at last row and exising clbal is < sold quantity. Need to add this row and move on to next.
+					else:
+						if($inv['clbal']<=0):
+							$rowcount++;
+							continue;
+						endif;
+						$item->id=$inv['id'];
+						$item->hsn=$inv['hsn'];
+						$_POST['quantity']=$inv['clbal'];
+						$qtysold-=$inv['clbal'];
+						$rowcount++;
+					endif;
+					
+				//currently submitted data
+					//$_POST['discount'] = $_POST['discount']==''?0:$_POST['discount'];
+					//$_POST['cash_disc'] = $_POST['cash_disc']==''?0:$_POST['cash_disc'];
+					$details = array('inventory_id' => $item->id, 'item_id' => $item->item_id, 'myprice'=>$item->myprice, 'rate' => $item->rate, 'quantity' => $_POST['quantity'], 'hsn' => $item->hsn, 'gst_rate' => $item->gstrate, 'gcat_id'=>$item->gcat_id, 'rcm'=>$item->rcm, 'title' => $item->title);
+				
+				//build an array to add
+					$det[]=$details;	
+				
+				//if all sales is factored in, exit the foreach loop
+					if (0==$qtysold):
+					break;
+					endif;
+				endforeach;	
+				//add to session
+				// first transaction - session is empty
+				if (!isset($this->session->sales_details)||empty($this->session->sales_details)):
+				$this->session->sales_details=$det;
+				else:
+				//add to session
+				$det1=$this->session->sales_details;
+				foreach ($det as $d):
+				$det1[]=$d;
+				endforeach;
+				$this->session->sales_details=$det1;
+				endif;
+				
+				//need to reduce the last sale from clbal in inventory
+				$inventory = $this->session->invent;
+				foreach ($inventory as $key => $value):
+					if ($value['item_id'] == $item->item_id and $value['myprice'] == $item->myprice):
+					$inventory[$key]['clbal']-=$qtysold1;
+					//print_r($inventory[$key]['clbal']);
+					endif;
+				endforeach;
+				//remove 0 cl bal entries from inventory. This appears at 4 places in this file
+				foreach ($inventory as $key => $value):
+					if ($value['clbal']<=0):
+					unset ($inventory[$key]);
+					endif;
+				endforeach;
+				//put chgd inventory in session
+				$this->session->invent = $inventory;
+				//$this->session->sales_details = $det;
+				
+				//now everything is in session
+				$data['details'] = $this->session->sales_details;
+				$data['invent'] = $this->session->invent;	
+				
+				$this->load->view('templates/header');
+				$this->load->view('trns_details/ec',$data);
+				$this->load->view('templates/footer');	
+			
+		
+			//complete
+			else:
+			//submitted to complete, no currently submitted data
+				//if a joker submits empty bill:
+				if (!isset($this->session->sales_details)||empty($this->session->sales_details)):
+					unset($_SESSION['invent']);
+					echo $this->load->view('templates/header','',true);
+					die("Sorry, You cannt create an empty bill<br> <a href = ".site_url('welcome/home').">Go Home</a href>");
+				endif;
+				//unset($_POST);
+				//$_POST = array();
+				$details=$this->session->sales_details;
+				$data['amount']=0;
+				foreach ($details as $det):
+					$data['amount']+=$det['quantity']*$det['rate'];
+				endforeach;
+				
+				$this->load->view('templates/header');
+				$this->load->view('trns_details/ec_complete', $data);
+		endif;	
+		
+		
+		}
+		
+		public function ec_complete(){
+		
+		$diff=$_POST['amount']-$_POST['amt'];
+		unset($_SESSION['sales_details']);
+		unset($_SESSION['invent']);
+		$this->load->view('templates/header');
+		echo $diff;
+		$this->load->view('templates/footer');
+		
+		
+		}
 }
 ?>
 
