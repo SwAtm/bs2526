@@ -182,6 +182,7 @@ class Inventory_model extends CI_Model{
 	$this->db->from('inventory');
 	$this->db->where('item_id',$item_id);
 	$this->db->where('myprice', $myprice);
+	$this->db->where('location_id',$this->session->loc_id);
 	$this->db->order_by('id ASC');
 	$sql=$this->db->get();
 	return $sql->result_array();
