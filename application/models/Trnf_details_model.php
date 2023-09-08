@@ -64,4 +64,28 @@ class Trnf_details_model extends CI_Model{
 	return $sql->result_array();
 	}
 
+	public function getouttrnf_per_loc(){
+	//called by welcome/logout
+	$sql = $this->db->select_sum('quantity');
+	$sql = $this->db->from('trnf_details');
+	$sql = $this->db->join('trnf_summary', 'trnf_details.trnf_summ_id = trnf_summary.id');
+	$sql = $this->db->where('trnf_summary.from_id', $this->session->loc_id);
+	$sql = $this->db->get();
+	return $sql->row_array();
+	
+	}
+	
+	public function getintrnf_per_loc(){
+	//called by welcome/logout
+	$sql = $this->db->select_sum('quantity');
+	$sql = $this->db->from('trnf_details');
+	$sql = $this->db->join('trnf_summary', 'trnf_details.trnf_summ_id = trnf_summary.id');
+	$sql = $this->db->where('trnf_summary.to_id', $this->session->loc_id);
+	$sql = $this->db->get();
+	return $sql->row_array();
+	
+	}
+
+
+
 }

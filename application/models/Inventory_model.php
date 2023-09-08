@@ -190,6 +190,17 @@ class Inventory_model extends CI_Model{
 	
 	}
 	
+	public function getbal_per_loc(){
+	//called by welcome/logout
+	$this->db->select_sum('opbal');
+	$this->db->select_sum('clbal');
+	$this->db->from('inventory');
+	$this->db->where('location_id',$this->session->loc_id);
+	$sql=$this->db->get();
+	return $sql->row_array();
+	
+	}
+	
 
 
 }

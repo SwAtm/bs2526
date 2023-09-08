@@ -70,6 +70,7 @@ endif;
 	if($_SESSION['loc_name']=='Fort Ashrama'):
 	?>  
     <li><a href="<?php echo site_url('Po_summary/summary')?>">Purchase Order</a></li>
+        <li><a href="<?php echo site_url('Invent_update/inv_upd')?>">Process Inventory</a></li>
     <li><a href = '#'>Party Ledger</a>
         <ul class = "sub">
             <li><a href="<?php echo site_url('Party_trans/ledger')?>">Ledger</a></li>

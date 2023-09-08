@@ -71,10 +71,11 @@ class Trns_details_model extends CI_Model{
 		$sql = $this->db->join('trns_summary', 'trns_details.trns_summary_id=trns_summary.id');
 		$sql = $this->db->join('series', 'trns_summary.series = series.series');
 		$sql = $this->db->join('item', 'trns_details.item_id=item.id');
-		$sql = $this->db->join('inventory', 'trns_details.inventory_id=inventory.id');
+		//$sql = $this->db->join('inventory', 'trns_details.inventory_id=inventory.id');
 		$sql = $this->db->where('trns_details.item_id', $id);
 		$sql = $this->db->where('trns_details.myprice', $myprice);
-		$sql = $this->db->where('inventory.location_id', $this->session->loc_id);
+		//$sql = $this->db->where('inventory.location_id', $this->session->loc_id);
+		$sql = $this->db->where('series.location_name', $this->session->loc_name);
 		$sql = $this->db->get();
 		return $sql->result_array();
 		}
@@ -472,10 +473,19 @@ class Trns_details_model extends CI_Model{
 		and ts.date>=? and ts.date<=?
 		group by inventory.id";
 		return $this->db->query($sql, array($loc, $frdate, $todate))->result_array();	
+		}
 		
 		
-		
-		
+		public function getinout_per_loc(){
+		//called by welcome/logout
+		$sql="select sum(if(series.tran_type_name=\"Purchase\" or series.tran_type_name=\"Sales Return\", trns_details.quantity,0)) as inqty, 
+		sum(if(series.tran_type_name=\"Sales\" or series.tran_type_name=\"Purchase Return\",trns_details.quantity,0)) as outqty 
+		from trns_details join trns_summary on trns_details.trns_summary_id=trns_summary.id 
+		join series on trns_summary.series=series.series
+		join locations on series.location_name=locations.name 
+		where locations.id=?";
+		$res=$this->db->query($sql,array($this->session->loc_id));
+		return $res->row_array();
 		}
 	
 	
