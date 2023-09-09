@@ -88,7 +88,7 @@ echo "</form>";
 echo "</table>";
 
 if (isset($details)):
-echo "<table width = 100% border = 1><tr><td>Item id</td><td>Title</td><td>Rate</td><td>Quantity</td><td>Discount</td><td>Cash Disc</td><td>Amount</td></tr></tr>";
+echo "<table width = 100% border = 1><tr><td>Item id</td><td>Title</td><td>Rate</td><td>Quantity</td><td>Amount</td></tr></tr>";
 $total = 0;
 foreach ($details as $key):
 	$amt = (($key['rate']*$key['quantity']));

@@ -1066,7 +1066,7 @@ public function purch_add_details(){
 				foreach ($details as $det):
 					$data['amount']+=$det['quantity']*$det['rate'];
 				endforeach;
-				
+				$data['amount']=round($data['amount'],2);
 				$this->load->view('templates/header');
 				$this->load->view('trns_details/ec_complete', $data);
 		endif;	
@@ -1076,14 +1076,98 @@ public function purch_add_details(){
 		
 		public function ec_complete(){
 		
-		$diff=$_POST['amount']-$_POST['amt'];
-		unset($_SESSION['sales_details']);
-		unset($_SESSION['invent']);
-		$this->load->view('templates/header');
-		echo $diff;
-		$this->load->view('templates/footer');
+		//submitted
+		if($_POST['submit']):
+			$diff=$_POST['amount']-$_POST['amt'];
+		
+
+
+
+			//unsubmitted	
+				if (!$series = $this->Series_model->get_series_by_location()):
+			
+				echo $this->load->view('templates/header','',true);
+				die("Sorry, No Series defined for this location<br> <a href = ".site_url('welcome/home').">Go Home</a href>";
+				endif;
+			
+				$data['series'] = $series;
+				$this->load->view('templates/header');
+				$this->load->view('trns_details/sales_complete_details',$data);
+				//$this->load->view('templates/footer');		
+
+			//cancelled	
+			elseif (isset($_POST['cancel'])):
+				unset($_SESSION['sales_details']);
+				unset($_SESSION['invent']);
+				redirect (site_url('Welcome/home'));
+			
+			else:
+			//submitted	
+			//for trns_summary
+				$series_details = $this->Series_model->get_series_details($_POST['series']);
+				$data['series_id'] = $series_details['id'];
+				$data['series'] = $series_details['series'];
+				$no_array = $this->Trns_summary_model->get_max_no($series_details['series']);
+				$data['no'] = $no_array['no']+1;
+				$data['date'] = date('Y-m-d');
+				$party_details = $this->Party_model->get_details($_POST['party']);
+				$data['party_id'] = $party_details['id'];
+				$data['party_status'] = $party_details['status'];
+				$data['expenses'] = $_POST['expenses'];
+				$data['party_gstno'] = $party_details['gstno'];
+				$data['party_state'] = $party_details['state'];
+				$data['party_state_io'] = $party_details['state_io'];
+				$data['remark'] = $_POST['remark'];
+				$tran_type_name = $series_details['tran_type_name'];
+				
+				$this->db->trans_start();
+				$this->Trns_summary_model->add($data);
+			
+				//for trns_details and inventory
+				$trns_summary_id = $this->Trns_summary_model->get_max_id()['id'];
+				//get details from session
+				$det = $this->session->sales_details;
+				foreach ($det as $d):
+					$d['trns_summary_id'] = $trns_summary_id;
+					unset($d['title']);
+					$td[] = $d;
+				endforeach;
+				
+				foreach ($td as $t):
+					$this->Trns_details_model->add($t);
+					$this->Inventory_model->update_transaction($tran_type_name,$t['inventory_id'], $t['quantity']);
+				endforeach;
+				$this->db->trans_complete();
+				unset($_SESSION['invent']);
+				unset($_SESSION['sales_details']);
+				redirect(site_url('Reports/print_bill/'.$trns_summary_id));
+				/*
+				$this->load->view('templates/header');
+				$this->output->append_output("<a href =".site_url('trns_summary/summary').">Go to List</a href>");
+				$this->load->view('templates/footer');	
+				*/
+			endif;	
+
 		
 		
+		
+		
+		
+		
+		
+		
+			unset($_SESSION['sales_details']);
+			unset($_SESSION['invent']);
+			$this->load->view('templates/header');
+			echo $diff;
+			$this->load->view('templates/footer');
+		//cancelled
+		else:
+			unset($_SESSION['sales_details']);
+			unset($_SESSION['invent']);
+			$this->load->view('templates/header');
+			$this->load->view('templates/footer');
+		endif;	
 		}
 }
 ?>
