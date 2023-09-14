@@ -6,7 +6,7 @@ class Party_model extends CI_Model{
 	}
 
 	public function getall(){
-	//called by trns_details/purch_complete_details, trns_details/sales_complete_details, trns_summary/summary_edit, trns_summary/trns_search
+	//called by trns_details/purch_complete_details, trns_details/sales_complete_details, trns_summary/summary_edit, trns_summary/trns_search, trns_details/ec
 	$sql=$this->db->select('*');
 	$sql=$this->db->from('party');
 	$sql=$this->db->get();
@@ -14,7 +14,7 @@ class Party_model extends CI_Model{
 	}
 
 	public function get_details($id){
-	//trns_details/sales_complete_details, trns_summary/summary_edit, trns_details/purch_complete_details, reports/print_bill, party_trans/ind_ledger
+	//trns_details/sales_complete_details, trns_summary/summary_edit, trns_details/purch_complete_details, reports/print_bill, party_trans/ind_ledger, trns_details/ec_complete
 	$sql=$this->db->select('*');
 	$sql=$this->db->from('party');
 	$sql=$this->db->where('id', $id);

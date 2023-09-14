@@ -6,7 +6,7 @@ class Trns_details_model extends CI_Model{
 	}
 
 	public function add($data){
-	//called by trns_details/sales_complete_details, trns_details/edit_purchase_add, trns_details/edit_sales_add, trns_details/purch_complete_details
+	//called by trns_details/sales_complete_details, trns_details/edit_purchase_add, trns_details/edit_sales_add, trns_details/purch_complete_details, trns_details/ec_complete
 	if($this->db->insert('trns_details',$data)):
 		return true;
 	else:

@@ -41,7 +41,7 @@ class Inventory_model extends CI_Model{
 	
 	
 	public function get_list_per_loc(){
-	//called by trns_details/sales_add_details/ trns_details/edit_sales_add, trnf_details/send, stock/add
+	//called by trns_details/sales_add_details/ trns_details/edit_sales_add, trnf_details/send, stock/add, trns_details/ec
 		$sql = $this->db->select('inventory.item_id, inventory.myprice, sum(inventory.clbal) as clbal, item.title, item.gstrate, item.gcat_id, item.rcm' );
 		$sql = $this->db->from('inventory');
 		$sql = $this->db->join('item','item.id = inventory.item_id');
@@ -58,7 +58,7 @@ class Inventory_model extends CI_Model{
 	}
 
 	public function update_transaction($tran_type_name, $tinventory_id, $tquantity){
-		//called by trns_details/sales_complete_details, trns_details/edit_sales_add
+		//called by trns_details/sales_complete_details, trns_details/edit_sales_add, trns_details/ec_complete
 		if ('Sale Return' == $tran_type_name):
 			$this->db->set('in_qty','in_qty+'.$tquantity,false);
 		else:
@@ -104,7 +104,7 @@ class Inventory_model extends CI_Model{
 	}	
 	
 	public function locationwise_stock(){
-		//called by item/get_stock_all
+		//called by item/get_stock_all, item/printstock
 		$this->db->select('item.id, item.title, item.gstrate, invent.myprice, sum(invent.clbal) as clbal');
 		$this->db->from('item');
 		$this->db->join ('inventory invent', 'item.id=invent.item_id');
@@ -177,7 +177,7 @@ class Inventory_model extends CI_Model{
 	}
 	
 	public function select_inv($item_id, $myprice){
-	//called by Trns_details/sales_add_details
+	//called by Trns_details/sales_add_details, trns_details/ec
 	$this->db->select('id, clbal, hsn');
 	$this->db->from('inventory');
 	$this->db->where('item_id',$item_id);

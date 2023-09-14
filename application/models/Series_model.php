@@ -31,7 +31,7 @@ endif;
 	}
 	
 	public function get_series_by_location()	{
-		//called by trns_details/sales_complete_details
+		//called by trns_details/sales_complete_details, trns_details/ec
 	$sql=$this->db->select('*');
 	$sql=$this->db->from('series');
 	$sql=$this->db->where('location_name',$this->session->loc_name);
@@ -46,7 +46,7 @@ endif;
 	}
 
 	public function get_series_details($id){
-		//called by trns_details/sales_complete_details, trns_summary/summary_edit
+		//called by trns_details/sales_complete_details, trns_summary/summary_edit, trns_details/ec_complete
 	$sql=$this->db->select('*');
 	$sql=$this->db->from('series');
 	$sql=$this->db->where('id',$id);

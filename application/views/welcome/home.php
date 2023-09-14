@@ -80,6 +80,14 @@ endif;
 <?php
 endif;
 ?>	
+	 <li><a href="<?php echo site_url('Item/printstock')?>">Print Stock</a></li>
+	 <?php
+	 if($_SESSION['loc_name']=='Extension Counter'):
+	 ?>
+	 <li><a href="<?php echo site_url('Trns_details/ec')?>">Record Balance</a></li>
+	 <?php
+	 endif;
+	 ?>
 	<!--<li><a href="#">Proforma</a>
 		<ul class="sub">
 			<li><a href="<?php echo site_url('Profo_Summary/summary')?>">Add Proforma</a></li>

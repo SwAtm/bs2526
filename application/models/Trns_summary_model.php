@@ -6,7 +6,7 @@ class Trns_summary_model extends CI_Model{
 	}
 
 	public function get_max_no($sr){
-	//called by trns_details/sales_complete_details, trns_details/purch_complete_details
+	//called by trns_details/sales_complete_details, trns_details/purch_complete_details, trns_details/ec_complete
 	$sql=$this->db->select_max('no');
 	$sql=$this->db->from('trns_summary');
 	$sql=$this->db->where('series',$sr);
@@ -15,7 +15,7 @@ class Trns_summary_model extends CI_Model{
 	}
 
 	public function add($data){
-	//called by trns_details/sales_complete_details, trns_details/purch_complete_details
+	//called by trns_details/sales_complete_details, trns_details/purch_complete_details, trns_details/ec_complete
 	if($this->db->insert('trns_summary',$data)):
 		return true;
 	else:
@@ -25,7 +25,7 @@ class Trns_summary_model extends CI_Model{
 	}
 
 	public function get_max_id(){
-	//called by trns_details/sales_complete_details, trns_details/purch_complete_details
+	//called by trns_details/sales_complete_details, trns_details/purch_complete_details, trns_details/ec_complete
 	$sql=$this->db->select_max('id');
 	$sql=$this->db->from('trns_summary');
 	$sql=$this->db->get();

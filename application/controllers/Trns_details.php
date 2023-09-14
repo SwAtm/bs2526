@@ -344,6 +344,8 @@ public function purch_add_details(){
 			//unsubmitted	
 				if (!$series = $this->Series_model->get_series_by_location()):
 			//this query returns all sales for present location
+				unset($_SESSION['sales_details']);
+				unset($_SESSION['invent']);
 				echo $this->load->view('templates/header','',true);
 				die("Sorry, No Series defined for this location<br> <a href = ".site_url('welcome/home').">Go Home</a href>&nbsp&nbsp&nbsp<a href = ".site_url('trns_summary/summary').">Or Go to List</a href>".$this->session->location_name);
 				endif;
@@ -912,16 +914,249 @@ public function purch_add_details(){
 		
 		}
 
+		public function ec(){
+		
+			$this->form_validation->set_rules('quantity', 'Quantity Returned', 'required'|'numeric');
+			$this->form_validation->set_rules('quantity', 'Quantity Returned', 'callback_qty_check');
+			//first run
+			//if (!isset($_POST)||empty($_POST)):			
+			if ($this->form_validation->run()==false and (!isset($_POST)||empty($_POST))):	
+				if (!$inventory = $this->Inventory_model->get_list_per_loc()):
+					//nothing in the inventory	
+					echo $this->load->view('templates/header','',true);
+					die("Sorry, Inventory is empty<br> <a href = ".site_url('welcome/home').">Go Home</a href>");
+						
+				endif;
+				foreach ($inventory as $k=>$v):
+					$inventory[$k]['rate']=$v['myprice']*(100+$v['gstrate'])/100;
+				endforeach;
+				//remove 0 cl bal entries from inventory.
+				foreach ($inventory as $key => $value):
+					if ($value['clbal']<=0):
+					unset ($inventory[$key]);
+					endif;
+				endforeach;
+				$data['invent'] = $inventory;
+				$this->session->invent = $inventory;
+				$this->load->view('templates/header');
+				$this->load->view('trns_details/ec',$data);
+
+			//submitted but failed validation
+			elseif ($this->form_validation->run()==false and (isset($_POST)||!empty($_POST))):		
+				//if some sales is recorded till now:
+				if($this->session->sales_details||!empty($this->session->sales_details)):
+					$data['details'] = $this->session->sales_details;
+				endif;
+				$data['invent'] = $this->session->invent;	
+				$this->load->view('templates/header');
+				$this->load->view('trns_details/ec',$data);
+				$this->load->view('templates/footer');	
+			//cancelled
+			elseif (isset($_POST['cancel'])):
+			
+				unset($_SESSION['sales_details']);
+				unset($_SESSION['invent']);
+				redirect (site_url('Welcome/home'));
+		
+			//submitted to add and is valid
+			elseif(isset($_POST['add'])):
+				$item = json_decode($_POST['item']);
+				//choose appropriate inventory_id and corrosponding hsn
+				$selectedinv=$this->Inventory_model->select_inv($item->item_id, $item->myprice);
+				$rowcount=1;
+				//quantity coming from post is the returned quantity. Sales quantity should be arrived at by subtracting returned quantity from clbal.
+				$_POST['quantity']=$item->clbal-$_POST['quantity'];
+				$qtysold1=$qtysold=$_POST['quantity'];
+				foreach ($selectedinv as $inv):
+				//at last row
+					if($rowcount==count($selectedinv)):
+						$item->id=$inv['id'];
+						$item->hsn=$inv['hsn'];
+						$_POST['quantity']=$qtysold;
+					//not at last row but existing clbal is > sold quantity
+					elseif($qtysold<=$inv['clbal']):	
+						$item->id=$inv['id'];
+						$item->hsn=$inv['hsn'];
+						$_POST['quantity']=$qtysold;
+						$qtysold=0;
+					//not at last row and exising clbal is < sold quantity. Need to add this row and move on to next.
+					else:
+						if($inv['clbal']<=0):
+							$rowcount++;
+							continue;
+						endif;
+						$item->id=$inv['id'];
+						$item->hsn=$inv['hsn'];
+						$_POST['quantity']=$inv['clbal'];
+						$qtysold-=$inv['clbal'];
+						$rowcount++;
+					endif;
+					
+				//currently submitted data
+					//$_POST['discount'] = $_POST['discount']==''?0:$_POST['discount'];
+					//$_POST['cash_disc'] = $_POST['cash_disc']==''?0:$_POST['cash_disc'];
+					$details = array('inventory_id' => $item->id, 'item_id' => $item->item_id, 'myprice'=>$item->myprice, 'rate' => $item->rate, 'quantity' => $_POST['quantity'], 'hsn' => $item->hsn, 'gst_rate' => $item->gstrate, 'gcat_id'=>$item->gcat_id, 'rcm'=>$item->rcm, 'title' => $item->title);
+				
+				//build an array to add
+					$det[]=$details;	
+				
+				//if all sales is factored in, exit the foreach loop
+					if (0==$qtysold):
+					break;
+					endif;
+				endforeach;	
+				//add to session
+				// first transaction - session is empty
+				if (!isset($this->session->sales_details)||empty($this->session->sales_details)):
+				$this->session->sales_details=$det;
+				else:
+				//add to session
+				$det1=$this->session->sales_details;
+				foreach ($det as $d):
+				$det1[]=$d;
+				endforeach;
+				$this->session->sales_details=$det1;
+				endif;
+				
+				//need to reduce the last sale from clbal in inventory
+				$inventory = $this->session->invent;
+				foreach ($inventory as $key => $value):
+					if ($value['item_id'] == $item->item_id and $value['myprice'] == $item->myprice):
+					$inventory[$key]['clbal']-=$qtysold1;
+					//print_r($inventory[$key]['clbal']);
+					endif;
+				endforeach;
+				//remove 0 cl bal entries from inventory. This appears at 4 places in this file
+				foreach ($inventory as $key => $value):
+					if ($value['clbal']<=0):
+					unset ($inventory[$key]);
+					endif;
+				endforeach;
+				//put chgd inventory in session
+				$this->session->invent = $inventory;
+				//$this->session->sales_details = $det;
+				
+				//now everything is in session
+				$data['details'] = $this->session->sales_details;
+				$data['invent'] = $this->session->invent;	
+				
+				$this->load->view('templates/header');
+				$this->load->view('trns_details/ec',$data);
+				$this->load->view('templates/footer');	
+			
+		
+			//complete
+			else:
+			//submitted to complete, no currently submitted data
+				//if a joker submits empty bill:
+				if (!isset($this->session->sales_details)||empty($this->session->sales_details)):
+					unset($_SESSION['invent']);
+					echo $this->load->view('templates/header','',true);
+					die("Sorry, You cannt create an empty bill<br> <a href = ".site_url('welcome/home').">Go Home</a href>");
+				endif;
+				//unset($_POST);
+				//$_POST = array();
+				$details=$this->session->sales_details;
+				$data['amount']=0;
+				foreach ($details as $det):
+					$data['amount']+=$det['quantity']*$det['rate'];
+				endforeach;
+				$data['amount']=round($data['amount'],2);
+							
+				if (!$series = $this->Series_model->get_series_by_location()):
+				//this query returns all sales for present location
+					unset($_SESSION['sales_details']);
+					unset($_SESSION['invent']);
+					echo $this->load->view('templates/header','',true);
+					die("Sorry, No Series defined for this location<br> <a href = ".site_url('welcome/home').">Go Home</a href>");
+				endif;
+			
+				$data['series'] = $series;
+				$data['party'] = $this->Party_model->getall();
+				$this->load->view('templates/header');
+				$this->load->view('trns_details/ec_complete', $data);
+		endif;	
+		
+		
+		}
+		public function qty_check($qty){
+		if(null!==$this->input->post('complete')||null!==$this->input->post('cancel')):
+		return true;
+		elseif(!json_decode($this->input->post('item'))):
+				$this->form_validation->set_message('qty_check', 'Invalid input. No Sales recorded. Pl continue');
+				return FALSE;	
+		else:
+			$clbal=json_decode($this->input->post('item'))->clbal;
+			if ($qty>$clbal):
+				$this->form_validation->set_message('qty_check', 'The {field} can not be greater than Issued Quantity. No Sales recorded');
+				return FALSE;
+			 elseif ($qty==$clbal):
+				$this->form_validation->set_message('qty_check', 'The {field} field is equal to  Issued Quantity. No Sales recorded. Pl continue');
+				return FALSE;
+			endif;
+		
+		endif;
+		}
+		
+		
+		
+		
+		public function ec_complete(){
+		
+		//submitted
+		if($_POST['submit']):
+			$diff=$_POST['amount']-$_POST['amt'];
+			if ($diff<0):
+				$diff=0;
+			endif;
+			$disc=round($diff*100/$_POST['amount'],2);	
+			//for trns_summary
+				$series_details = $this->Series_model->get_series_details($_POST['series']);
+				$data['series_id'] = $series_details['id'];
+				$data['series'] = $series_details['series'];
+				$no_array = $this->Trns_summary_model->get_max_no($series_details['series']);
+				$data['no'] = $no_array['no']+1;
+				$data['date'] = date('Y-m-d');
+				$party_details = $this->Party_model->get_details($_POST['party']);
+				$data['party_id'] = $party_details['id'];
+				$data['party_status'] = $party_details['status'];
+				$data['expenses'] = $_POST['expenses'];
+				$data['party_gstno'] = $party_details['gstno'];
+				$data['party_state'] = $party_details['state'];
+				$data['party_state_io'] = $party_details['state_io'];
+				$data['remark'] = $_POST['remark'];
+				$tran_type_name = $series_details['tran_type_name'];
+				
+				$this->db->trans_start();
+				$this->Trns_summary_model->add($data);
+			
+				//for trns_details and inventory
+				$trns_summary_id = $this->Trns_summary_model->get_max_id()['id'];
+				//get details from session
+				$det = $this->session->sales_details;
+				foreach ($det as $d):
+					$d['trns_summary_id'] = $trns_summary_id;
+					unset($d['title']);
+					$d['discount']=$disc;
+					$td[] = $d;
+				endforeach;
+				
+				foreach ($td as $t):
+					$this->Trns_details_model->add($t);
+					$this->Inventory_model->update_transaction($tran_type_name,$t['inventory_id'], $t['quantity']);
+				endforeach;
+				$this->db->trans_complete();
+				unset($_SESSION['invent']);
+				unset($_SESSION['sales_details']);
+				redirect(site_url('Reports/print_bill/'.$trns_summary_id));
+		
+		//cancelled
+		else:
+			unset($_SESSION['sales_details']);
+			unset($_SESSION['invent']);
+			redirect (site_url('Welcome/home'));
+			
+		endif;	
+		}
 }
 ?>
-
-
-
-
-
-
-
-
-
-
-
