@@ -41,7 +41,9 @@ border: 1px solid black;
 border: 1px solid black;	
 }
 </style>
-
+<?php
+echo validation_errors();
+?>
 <table class = "tb">
 
 	<tr><th>Title</th><th style="width: 11%">Quantity</th><th style="width: 11%"></th></tr><tr>
@@ -73,7 +75,7 @@ echo "</select>";
 
 */
 ?>
-<td><input type = number size = 15 name = quantity required value = 1 min="1"></td>
+<td><input type = number size = 15 name = quantity required value = 1 ></td>
 
 <input type = hidden id = hsn>
 <!--<input type = hidden id = gstrate>-->

@@ -58,7 +58,7 @@ class Inventory_model extends CI_Model{
 	}
 
 	public function update_transaction($tran_type_name, $tinventory_id, $tquantity){
-		//called by trns_details/sales_complete_details, trns_details/edit_sales_add
+		//called by trns_details/sales_complete_details, trns_details/edit_sales_add, trns_details/ec_complete
 		if ('Sale Return' == $tran_type_name):
 			$this->db->set('in_qty','in_qty+'.$tquantity,false);
 		else:
@@ -177,7 +177,7 @@ class Inventory_model extends CI_Model{
 	}
 	
 	public function select_inv($item_id, $myprice){
-	//called by Trns_details/sales_add_details
+	//called by Trns_details/sales_add_details, trns_details/ec
 	$this->db->select('id, clbal, hsn');
 	$this->db->from('inventory');
 	$this->db->where('item_id',$item_id);

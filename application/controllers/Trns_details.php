@@ -344,6 +344,8 @@ public function purch_add_details(){
 			//unsubmitted	
 				if (!$series = $this->Series_model->get_series_by_location()):
 			//this query returns all sales for present location
+				unset($_SESSION['sales_details']);
+				unset($_SESSION['invent']);
 				echo $this->load->view('templates/header','',true);
 				die("Sorry, No Series defined for this location<br> <a href = ".site_url('welcome/home').">Go Home</a href>&nbsp&nbsp&nbsp<a href = ".site_url('trns_summary/summary').">Or Go to List</a href>".$this->session->location_name);
 				endif;
@@ -913,9 +915,12 @@ public function purch_add_details(){
 		}
 
 		public function ec(){
-		//first run
-			if (!isset($_POST)||empty($_POST)):			
-				
+		
+			$this->form_validation->set_rules('quantity', 'Quantity Returned', 'required'|'numeric');
+			$this->form_validation->set_rules('quantity', 'Quantity Returned', 'callback_qty_check');
+			//first run
+			//if (!isset($_POST)||empty($_POST)):			
+			if ($this->form_validation->run()==false and (!isset($_POST)||empty($_POST))):	
 				if (!$inventory = $this->Inventory_model->get_list_per_loc()):
 					//nothing in the inventory	
 					echo $this->load->view('templates/header','',true);
@@ -936,35 +941,25 @@ public function purch_add_details(){
 				$this->load->view('templates/header');
 				$this->load->view('trns_details/ec',$data);
 
-				//cancel
+			//submitted but failed validation
+			elseif ($this->form_validation->run()==false and (isset($_POST)||!empty($_POST))):		
+				//if some sales is recorded till now:
+				if($this->session->sales_details||!empty($this->session->sales_details)):
+					$data['details'] = $this->session->sales_details;
+				endif;
+				$data['invent'] = $this->session->invent;	
+				$this->load->view('templates/header');
+				$this->load->view('trns_details/ec',$data);
+				$this->load->view('templates/footer');	
+			//cancelled
 			elseif (isset($_POST['cancel'])):
 			
 				unset($_SESSION['sales_details']);
 				unset($_SESSION['invent']);
 				redirect (site_url('Welcome/home'));
 		
-			//submitted to add and is invalid:
-			elseif(isset($_POST['add']) and (!is_object(json_decode($_POST['item'])) or ''==$_POST['quantity'] or empty($_POST['quantity']))):
-		
-		
-				//if no sales is recorded till now:
-				if(!$this->session->sales_details||empty($this->session->sales_details)):
-					unset ($_POST);
-					redirect(site_url('Trns_details/ec'));
-				//since some sales is recorded, we need to use inventory from session
-				else:
-					$data['details'] = $this->session->sales_details;
-					$data['invent'] = $this->session->invent;	
-					$this->load->view('templates/header');
-					$this->load->view('trns_details/ec',$data);
-					$this->load->view('templates/footer');	
-				endif;	
-			
-			
 			//submitted to add and is valid
-			elseif(isset($_POST['add']) and is_object(json_decode($_POST['item'])) and ''!=$_POST['quantity'] and !empty($_POST['quantity'])):
-		
-		
+			elseif(isset($_POST['add'])):
 				$item = json_decode($_POST['item']);
 				//choose appropriate inventory_id and corrosponding hsn
 				$selectedinv=$this->Inventory_model->select_inv($item->item_id, $item->myprice);
@@ -1067,42 +1062,54 @@ public function purch_add_details(){
 					$data['amount']+=$det['quantity']*$det['rate'];
 				endforeach;
 				$data['amount']=round($data['amount'],2);
+							
+				if (!$series = $this->Series_model->get_series_by_location()):
+				//this query returns all sales for present location
+					unset($_SESSION['sales_details']);
+					unset($_SESSION['invent']);
+					echo $this->load->view('templates/header','',true);
+					die("Sorry, No Series defined for this location<br> <a href = ".site_url('welcome/home').">Go Home</a href>");
+				endif;
+			
+				$data['series'] = $series;
+				$data['party'] = $this->Party_model->getall();
 				$this->load->view('templates/header');
 				$this->load->view('trns_details/ec_complete', $data);
 		endif;	
 		
 		
 		}
+		public function qty_check($qty){
+		if(null!==$this->input->post('complete')||null!==$this->input->post('cancel')):
+		return true;
+		elseif(!json_decode($this->input->post('item'))):
+				$this->form_validation->set_message('qty_check', 'Invalid input. No Sales recorded. Pl continue');
+				return FALSE;	
+		else:
+			$clbal=json_decode($this->input->post('item'))->clbal;
+			if ($qty>$clbal):
+				$this->form_validation->set_message('qty_check', 'The {field} can not be greater than Issued Quantity. No Sales recorded');
+				return FALSE;
+			 elseif ($qty==$clbal):
+				$this->form_validation->set_message('qty_check', 'The {field} field is equal to  Issued Quantity. No Sales recorded. Pl continue');
+				return FALSE;
+			endif;
+		
+		endif;
+		}
+		
+		
+		
 		
 		public function ec_complete(){
 		
 		//submitted
 		if($_POST['submit']):
 			$diff=$_POST['amount']-$_POST['amt'];
-		
-
-
-
-			//unsubmitted	
-				if (!$series = $this->Series_model->get_series_by_location()):
-			
-				echo $this->load->view('templates/header','',true);
-				die("Sorry, No Series defined for this location<br> <a href = ".site_url('welcome/home').">Go Home</a href>";
-				endif;
-			
-				$data['series'] = $series;
-				$this->load->view('templates/header');
-				$this->load->view('trns_details/sales_complete_details',$data);
-				//$this->load->view('templates/footer');		
-
-			//cancelled	
-			elseif (isset($_POST['cancel'])):
-				unset($_SESSION['sales_details']);
-				unset($_SESSION['invent']);
-				redirect (site_url('Welcome/home'));
-			
-			else:
-			//submitted	
+			if ($diff<0):
+				$diff=0;
+			endif;
+			$disc=round($diff*100/$_POST['amount'],2);	
 			//for trns_summary
 				$series_details = $this->Series_model->get_series_details($_POST['series']);
 				$data['series_id'] = $series_details['id'];
@@ -1130,6 +1137,7 @@ public function purch_add_details(){
 				foreach ($det as $d):
 					$d['trns_summary_id'] = $trns_summary_id;
 					unset($d['title']);
+					$d['discount']=$disc;
 					$td[] = $d;
 				endforeach;
 				
@@ -1141,44 +1149,14 @@ public function purch_add_details(){
 				unset($_SESSION['invent']);
 				unset($_SESSION['sales_details']);
 				redirect(site_url('Reports/print_bill/'.$trns_summary_id));
-				/*
-				$this->load->view('templates/header');
-				$this->output->append_output("<a href =".site_url('trns_summary/summary').">Go to List</a href>");
-				$this->load->view('templates/footer');	
-				*/
-			endif;	
-
 		
-		
-		
-		
-		
-		
-		
-		
-			unset($_SESSION['sales_details']);
-			unset($_SESSION['invent']);
-			$this->load->view('templates/header');
-			echo $diff;
-			$this->load->view('templates/footer');
 		//cancelled
 		else:
 			unset($_SESSION['sales_details']);
 			unset($_SESSION['invent']);
-			$this->load->view('templates/header');
-			$this->load->view('templates/footer');
+			redirect (site_url('Welcome/home'));
+			
 		endif;	
 		}
 }
 ?>
-
-
-
-
-
-
-
-
-
-
-
