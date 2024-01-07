@@ -273,5 +273,124 @@ class Item extends CI_Controller{
 		$this->load->view('item/printstock', $data);
 				
 		}
+		
+		function recordstock(){
+		//first run
+		if (!isset($_POST)||empty($_POST)):			
+			//if ($this->form_validation->run()==false):
+				if (!$inventory = $this->Inventory_model->get_list_per_loc()):
+					//nothing in the inventory	
+					echo $this->load->view('templates/header','',true);
+					die("Sorry, Inventory is empty<br> <a href = ".site_url('welcome/home').">Go Home</a href>&nbsp&nbsp&nbsp<a href = ".site_url('welcome/home').">Or Go to List</a href>");
+								
+				endif;
+				foreach ($inventory as $k=>$v):
+					//$inventory[$k]['rate']=number_format($v['myprice']*(100+$v['gstrate'])/100,2,'.',',') ;
+					$inventory[$k]['rate']=$v['myprice']*(100+$v['gstrate'])/100;
+				endforeach;
+				//remove entries from inventory that have stock
+				foreach ($inventory as $key => $value):
+				if ($value['stock']<>0):
+				unset ($inventory[$key]);
+				endif;
+				endforeach;
+				$this->session->inventory = $inventory;
+				$data['invent']=$inventory;
+				$this->load->view('templates/header');
+				$this->load->view('stock/recordstock',$data);
+				//$this->load->view('templates/footer');
+		//to cancel
+		elseif(isset($_POST['cancel'])):
+			unset($_SESSION['inventory']);
+			redirect('welcome/home');
+		//to add and continue or close
+		else	:
+			//$item = json_decode($_POST['item']);
+			//$inventory_id = $item->id;
+			//$quantity = $_POST['quantity'];
+			//$data['location_id'] = $this->session->loc_id;
+			//$data['inventory_id'] = $inventory_id;
+			//$data['stock'] = $_POST['quantity'];
+			//$data['date'] = date('Y-m-d');
+			//$data['remark'] = $_POST['remark'];
+			$stockdet=$_POST['stockdet'];
+			foreach ($stockdet as $stock):
+			$item_id=$stock['item_id'];
+			$myprice=$stock['myprice'];
+			$selectedinv=$this->Inventory_model->select_inv($item_id, $myprice);
+			
+			
+				$rowcount=1;
+				$qtyadded1=$qtyadded=$stock['quantity'];
+				foreach ($selectedinv as $inv):
+					//at last row
+					if($rowcount==count($selectedinv)):
+						$this->Inventory_model->update_stock($inv['id'], $qtyadded);
+					//not at last row but existing clbal is > stock
+					elseif($qtyadded<=$inv['clbal']):	
+						$this->Inventory_model->update_stock($inv['id'], $qtyadded);
+						$qtyadded=0;
+					//not at last row and exising clbal is < stock. Need to add this row and move on to next.
+					else:
+						if($inv['clbal']<=0):
+							$rowcount++;
+							continue;
+						endif;
+						$item->id=$inv['id'];
+						$item->hsn=$inv['hsn'];
+						$_POST['quantity']=$inv['clbal'];
+						$qtyadded-=$inv['clbal'];
+						$rowcount++;
+					endif;
+						
+								
+				//if all sales is factored in, exit the foreach loop
+					if (0==$qtyadded):
+					break;
+					endif;
+				endforeach;	
 
+			
+			
+			
+			
+			
+			
+			
+			
+			$this->db->trans_start();
+			$this->Inventory_model->update_stock($inventory_id, $quantity);
+			$this->Stock_model->add($data);
+			$inventory=$this->session->inventory;
+			foreach ($inventory as $key=>$value):
+				if ($inventory[$key]['id'] == $inventory_id):
+					$inventory[$key]['stock']+=$quantity;
+				endif;
+			endforeach;
+			$this->session->inventory = $inventory;
+			$data['invent']=$inventory;
+			$this->db->trans_complete();
+			
+			
+			//add and continue
+			if(isset($_POST['continue'])):
+			
+			$this->load->view('templates/header');
+			$this->load->view('stock/recordstock',$data);	
+			
+			//add and close
+			else:
+			unset($_SESSION['inventory']);
+			redirect('welcome/home');
+			endif;
+		
+		endif;
+				
+		}
+
+		
+		
+		
+		
+		}
 }

@@ -41,8 +41,8 @@ class Inventory_model extends CI_Model{
 	
 	
 	public function get_list_per_loc(){
-	//called by trns_details/sales_add_details/ trns_details/edit_sales_add, trnf_details/send, stock/add, trns_details/ec
-		$sql = $this->db->select('inventory.item_id, inventory.myprice, sum(inventory.clbal) as clbal, item.title, item.gstrate, item.gcat_id, item.rcm' );
+	//called by trns_details/sales_add_details/ trns_details/edit_sales_add, trnf_details/send, stock/add, trns_details/ec, item/recordstock
+		$sql = $this->db->select('inventory.item_id, inventory.myprice, sum(inventory.clbal) as clbal, sum(inventory.stock) as stock, item.title, item.gstrate, item.gcat_id, item.rcm' );
 		$sql = $this->db->from('inventory');
 		$sql = $this->db->join('item','item.id = inventory.item_id');
 		$sql = $this->db->group_by('inventory.item_id, inventory.myprice');

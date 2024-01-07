@@ -23,7 +23,12 @@ div {
 <?php
 echo "<table width=100%  bgcolor=lightblue cellpadding=5>";
 echo "<tr><td align=middle><b>".$this->session->cname." ".$this->session->ccity."</b></td></tr>";
-echo "<tr><td align=middle>".date('l jS \of F Y h:i:s A')."</td></tr>";
+echo "<tr><td align = middle id = time>";
+echo "</td></tr>";
+//echo "<tr><td align=middle>".date('l jS \of F Y h:i:s A')."</td></tr>";
+echo "<tr><td>";
+
+//echo "<tr><td align=middle>".date('l jS \of F Y h:i:s A')."</td></tr>";
 if (isset($this->session->loc_id)||!empty($this->session->loc_id)):
 //if ((!null == LOC_NAME)||!empty(LOC_NAME)):
 //echo "";
@@ -35,7 +40,16 @@ echo "Please Log in";
 redirect('welcome/logout');
 echo "</table>";
 endif;
-
+?>
+<script type="text/javascript">
+function Timer() {
+   var dt=new Date();
+   document.getElementById('time').innerHTML=dt.getDate()+ '-' + (dt.toLocaleString('default', {month: 'long'}))+ '-'+dt.getFullYear()+'||'+dt.getHours()+":"+dt.getMinutes()+":"+dt.getSeconds();
+   setTimeout("Timer()",1000);
+}
+Timer();
+</script>
+<?php
 /*
 if (null!==$this->session->logged AND $this->session->logged=='admin'):
 		echo "Logged in as ".$this->session->logged."<a href=".site_url('login/logout')."> Log Out</a>";
@@ -44,9 +58,9 @@ else:
 echo '';
 endif;
 */
-
-
-
 ?>
-<!--/body>
-</html>-->
+
+
+
+</body>
+</html>
