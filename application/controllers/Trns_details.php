@@ -195,8 +195,7 @@ public function purch_add_details(){
 			if (!$inventory = $this->Inventory_model->get_list_per_loc()):
 					//nothing in the inventory	
 				echo $this->load->view('templates/header','',true);
-				die("Sorry, Inventory is empty<br> <a href = ".site_url('welcome/home').">Go Home</a href>&nbsp&nbsp&nbsp<a href = ".site_url('trns_summary/summary').">Or Go to List</a href>");
-						
+				die("Sorry, Inventory is empty<br> <a href = ".site_url('welcome/home').">Go Home</a href>&nbsp&nbsp&nbsp<a href = ".site_url('trns_summary/summary').">Or Go to List</a href>");						
 			endif;
 			foreach ($inventory as $k=>$v):
 				//$inventory[$k]['rate']=number_format($v['myprice']*(100+$v['gstrate'])/100,2,'.',',') ;
@@ -210,6 +209,7 @@ public function purch_add_details(){
 			endforeach;
 			$data['invent'] = $inventory;
 			$this->session->invent = $inventory;
+			$data['details']=$this->session->sales_details=array();
 			$this->load->view('templates/header');
 			$this->load->view('trns_details/sales_add_details',$data);
 			//$this->load->view('templates/footer');	
@@ -221,9 +221,10 @@ public function purch_add_details(){
 			redirect (site_url('Welcome/home'));
 		
 		//submitted to add and is invalid:
-		elseif(isset($_POST['add']) and (!is_object(json_decode($_POST['item'])) or ''==$_POST['quantity'] or empty($_POST['quantity']))):
+		elseif(isset($_POST['add']) and (!is_object(json_decode($_POST['item'])) or ''==$_POST['quantity'] or empty($_POST['quantity']) or json_decode($_POST['item'])->clbal<$_POST['quantity'])):
 		
 		
+			/*
 			//if no sales is recorded till now:
 			if(!$this->session->sales_details||empty($this->session->sales_details)):
 				unset ($_POST);
@@ -232,12 +233,32 @@ public function purch_add_details(){
 			else:
 				$data['details'] = $this->session->sales_details;
 				$data['invent'] = $this->session->invent;	
+				$data['error']="NOT recorded. Zero or blank quantity entered or/Invalid data sent";
 				$this->load->view('templates/header');
 				$this->load->view('trns_details/sales_add_details',$data);
 				$this->load->view('templates/footer');	
 			endif;	
+			*/
+			//matters not whether any sales is recorded or not. If no sales is recorded, session->sales_detials will be an empty array or it will have data
+			$data['details'] = $this->session->sales_details;
+			$data['invent'] = $this->session->invent;	
+			$data['error']="NOT recorded. Invalid data OR trying to sell more than cl bal ";
+			$this->load->view('templates/header');
+			$this->load->view('templates/error_template',$data);	
+			$this->load->view('trns_details/sales_add_details',$data);
+			//$this->load->view('templates/footer');	
 		
-		
+		/*
+		//submitted to add and is invalid. Total sales cannot be > clbal.
+		elseif(isset($_POST['add']) and is_object(json_decode($_POST['item'])) and ''!=$_POST['quantity'] and !empty($_POST['quantity']) and (json_decode($_POST['item'])->clbal<$_POST['quantity'])):
+			$data['details'] = $this->session->sales_details;
+			$data['invent'] = $this->session->invent;	
+			$data['error']="NOT recorded. Quantity entered is more than cl balance";
+			$this->load->view('templates/header');
+			$this->load->view('templates/error_template',$data);	
+			$this->load->view('trns_details/sales_add_details',$data);
+			$this->load->view('templates/footer');	
+		*/	
 		//submitted to add and is valid
 		elseif(isset($_POST['add']) and is_object(json_decode($_POST['item'])) and ''!=$_POST['quantity'] and !empty($_POST['quantity'])):
 		
@@ -322,7 +343,7 @@ public function purch_add_details(){
 			
 			$this->load->view('templates/header');
 			$this->load->view('trns_details/sales_add_details',$data);
-			$this->load->view('templates/footer');	
+			//$this->load->view('templates/footer');	
 		
 		else:
 			//submitted to complete, no currently submitted data
@@ -693,26 +714,28 @@ public function purch_add_details(){
 				$this->session->invent = $data['invent'];
 				$this->load->view('templates/header');	
 				$this->load->view('trns_details/sales_add_details',$data);	
-				$this->load->view('templates/footer');	
+				//$this->load->view('templates/footer');	
 			//cancel
 			elseif (isset($_POST['cancel'])):
 				unset($_SESSION['details']['retained']['tran_type_name']['trns_summary_id']['deleted']['toadd']['invent']['party_status']);
 				redirect (site_url('Welcome/home'));
 	
 			//submitted to add but invalid
-			elseif(isset($_POST['add']) and (!is_object(json_decode($_POST['item'])) or ''==$_POST['quantity'] or empty($_POST['quantity']))):
+			elseif(isset($_POST['add']) and (!is_object(json_decode($_POST['item'])) or ''==$_POST['quantity'] or empty($_POST['quantity']) or json_decode($_POST['item'])->clbal<$_POST['quantity'])):
 				
 				//nothing is submitted to add untill now
-				if(!isset($this->session->toadd) or empty($this->session->toadd)):
+				/*if(!isset($this->session->toadd) or empty($this->session->toadd)):
 					unset ($_POST);
 					redirect(site_url('Trns_details/edit_sales_add'));
-				else:
+				else:*/
 					$data['invent']= $this->session->invent;
 					$data['calling_proc'] = 'edit';
+					$data['error']='Not added, invalid data OR trying to sell more than cl bal';
 					$this->load->view('templates/header');	
+					$this->load->view('templates/error_template',$data);	
 					$this->load->view('trns_details/sales_add_details',$data);	
-					$this->load->view('templates/footer');		
-				endif;
+					//$this->load->view('templates/footer');		
+				//endif;
 				
 			//submitted to add and is valid
 			elseif(isset($_POST['add']) and is_object(json_decode($_POST['item'])) and ''!=$_POST['quantity'] and !empty($_POST['quantity'])):
@@ -796,7 +819,7 @@ public function purch_add_details(){
 				$data['calling_proc'] = 'edit';
 				$this->load->view('templates/header');	
 				$this->load->view('trns_details/sales_add_details',$data);	
-				$this->load->view('templates/footer');	
+				//$this->load->view('templates/footer');	
 			else:
 				//bill is complete.
 				$countdeleted=$countretained=$counttoadd=0;

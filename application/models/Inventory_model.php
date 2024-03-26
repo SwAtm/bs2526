@@ -41,7 +41,7 @@ class Inventory_model extends CI_Model{
 	
 	
 	public function get_list_per_loc(){
-	//called by trns_details/sales_add_details/ trns_details/edit_sales_add, trnf_details/send, stock/add, trns_details/ec, item/recordstock
+	//called by trns_details/sales_add_details/ trns_details/edit_sales_add, trnf_details/send, stock/add, trns_details/ec, inventory/recordstock, inventory/veiwinventory
 		$sql = $this->db->select('inventory.item_id, inventory.myprice, sum(inventory.clbal) as clbal, sum(inventory.stock) as stock, item.title, item.gstrate, item.gcat_id, item.rcm' );
 		$sql = $this->db->from('inventory');
 		$sql = $this->db->join('item','item.id = inventory.item_id');
@@ -104,7 +104,7 @@ class Inventory_model extends CI_Model{
 	}	
 	
 	public function locationwise_stock(){
-		//called by item/get_stock_all, item/printstock
+		//called by item/get_stock_all, Inventory/printstock
 		$this->db->select('item.id, item.title, item.gstrate, invent.myprice, sum(invent.clbal) as clbal');
 		$this->db->from('item');
 		$this->db->join ('inventory invent', 'item.id=invent.item_id');
@@ -170,15 +170,15 @@ class Inventory_model extends CI_Model{
 	}	
 	
 	public function update_stock($inventory_id, $quantity){
-	//called by stock/add
+	//called by inventory/recordstock
 		$this->db->set('stock','stock+'.(int) $quantity, FALSE);
 		$this->db->where('id',$inventory_id);
 		$this->db->update('inventory');
 	}
 	
 	public function select_inv($item_id, $myprice){
-	//called by Trns_details/sales_add_details, trns_details/ec
-	$this->db->select('id, clbal, hsn');
+	//called by Trns_details/sales_add_details, trns_details/ec, inventory/recordstock
+	$this->db->select('id, clbal, stock, hsn');
 	$this->db->from('inventory');
 	$this->db->where('item_id',$item_id);
 	$this->db->where('myprice', $myprice);
@@ -201,6 +201,21 @@ class Inventory_model extends CI_Model{
 	
 	}
 	
+	public function get_list_per_invid_per_loc(){
+	//called by inventory/printinventory
+	$sql = $this->db->select('inventory.item_id, inventory.myprice, inventory.clbal, inventory.stock, inventory.cost, item.title, item.gstrate, item_cat.name' );
+	$sql = $this->db->from('inventory');
+	$sql= $this->db->join('item', 'item.id=inventory.item_id');
+	$sql=$this->db->join ('item_cat', 'item.cat_id=item_cat.id');
+	$this->db->where('inventory.location_id', $this->session->loc_id);
+	$sql=$this->db->get();
+	return $sql->result_array();
+	}
 
+	public function batch_insert($stock){
+		//called by inventory/recordstock
+	$this->db->insert_batch('stock', $stock);
+	
+	}
 
 }

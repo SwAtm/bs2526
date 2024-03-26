@@ -82,10 +82,11 @@ endif;
 ?>	
 	 <li><a href = '#'>Inventory</a>
 		 <ul class = "sub">
-			<li><a href="<?php echo site_url('Item/printstock')?>">Print Stock</a></li>
-			<li><a href="<?php echo site_url('Item/recordstock')?>">Record Stock</a></li>
-			<li><a href="<?php echo site_url('Item/viewinventory')?>">View Inventory</a></li>
-			<li><a href="<?php echo site_url('Item/printinventory')?>">Print Inventory</a></li>
+			<li><a href="<?php echo site_url('Inventory/printstock')?>">Print Stock</a></li>
+			<li><a href="<?php echo site_url('Inventory/recordstock')?>">Record Stock</a></li>
+			<li><a href="<?php echo site_url('Inventory/viewinventory')?>">View Inventory</a></li>
+			<li><a href="<?php echo site_url('Inventory/printinventory')?>">Print Inventory</a></li>
+			<li><a href="<?php echo site_url('Stock/list_stock')?>">View Stock</a></li>
 		</ul>
 	 <?php
 	 if($_SESSION['loc_name']=='Extension Counter'):

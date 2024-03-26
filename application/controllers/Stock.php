@@ -4,23 +4,54 @@ class Stock extends CI_Controller{
 	{
 		parent::__construct();
 		$this->load->database();
+		$this->load->library('grocery_CRUD');
 		$this->load->helper('url');
 		//$this->load->helper('form');
 		//$this->load->library('form_validation');
 		$this->load->library('table');
-		//$this->load->helper('security');
-		$this->load->library('grocery_CRUD');
+		$this->load->helper('security');
 		$this->output->enable_profiler(TRUE);
-		$this->load->model('Inventory_model');
+		//$this->load->model('Inventory_model');
 		//$this->load->model('Trns_details_model');
 		//$this->load->model('Grocery_crud_model');
 		//$this->load->model('Trnf_details_model');
-		$this->load->model('Item_model');
-		$this->load->model('Stock_model');
-		$this->load->helper('pdf_helper');
+		//$this->load->model('Item_model');
+		//$this->load->model('Stock_model');
+		//$this->load->helper('pdf_helper');
 		$this->load->library('session');
 	}
 
+
+	public function list_stock()
+	{
+		$crud = new grocery_CRUD();
+		$crud->set_table('stock')
+		     ->where('location_id', $this->session->loc_id)
+		     ->set_subject('Item')
+			 ->columns('id', 'item_id', 'title','rate', 'stock')
+			 ->display_as('item_id','Item ID')
+			 ->display_as('title','Title')
+			 ->display_as('rate','Rate')
+			 ->display_as('stock','Stock')
+			 ->unset_edit()	
+			 ->unset_delete()
+			 ->unset_add();	
+		$output = $crud->render();
+		$output->extra ='';
+		$this->_example_output($output);                
+	}
+
+
+		function _example_output($output = null)
+	{
+		$this->load->view('templates/header');
+		$this->load->view('templates/trans_template.php',$output);    
+		$this->load->view('templates/footer');
+	}   
+
+
+
+/*
 		public function add(){
 		//first run
 		if (!isset($_POST)||empty($_POST)):			
@@ -107,12 +138,13 @@ class Stock extends CI_Controller{
 		$inventory[$k]['rate'] =$v['myprice']*(100+$v['gstrate'])/100;
 	}
 		//print_r($inventory);
+	{
 		$data['inventory']=$inventory;
 		$this->load->view('templates/header');
 		$this->load->view('stock/viewinventory',$data);
 		$this->load->view('templates/footer');
 		
 	}
-		
+*/		
 }
 ?>
