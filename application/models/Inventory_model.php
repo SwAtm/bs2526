@@ -218,4 +218,24 @@ class Inventory_model extends CI_Model{
 	
 	}
 
+	public function stockmyprice()
+	//called by inventory/printinventory
+	{
+	$sql=$this->db->select_sum('(stock*myprice)', 'stockmyprice');
+	$sql=$this->db->from('stock');
+	$sql=$this->db->where('stock.location_id', $this->session->loc_id);
+	$sql=$this->db->get();
+	return $sql->row()->stockmyprice;
+	}
+
+	public function invmyprice()
+	//called by inventory/printinventory
+	{
+	$sql=$this->db->select_sum('(stock*myprice)', 'invmyprice');
+	$sql=$this->db->from('inventory');
+	$sql=$this->db->where('inventory.location_id', $this->session->loc_id);
+	$sql=$this->db->get();
+	return $sql->row_array()['invmyprice'];
+	}
+
 }

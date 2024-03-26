@@ -198,7 +198,7 @@ class Inventory extends CI_Controller{
 			
 			//build an array to add to stock file
 			$stocktoadd=$this->session->stock;
-			$stocktoadd[]=array('location_id'=>$this->session->loc_id, 'item_id'=>$item->item_id, 'title'=>$item->title, 'rate'=>$item->rate, 'stock'=>$qtyadded1);
+			$stocktoadd[]=array('location_id'=>$this->session->loc_id, 'item_id'=>$item->item_id, 'title'=>$item->title, 'myprice'=>$item->myprice, 'rate'=>$item->rate, 'stock'=>$qtyadded1);
 			$this->session->stock=$stocktoadd;
 			
 			
@@ -239,8 +239,11 @@ class Inventory extends CI_Controller{
 		foreach ($inventory as $k=>$v):
 			$inventory[$k]['rate']=$v['myprice']*(100+$v['gstrate'])/100;
 		endforeach;
+		$data['stockmyprice']=$this->Inventory_model->stockmyprice();
+		$data['invmyprice']=$this->Inventory_model->invmyprice();
 		$data['invent']=$inventory;
 		$this->load->view('templates/header');
+		//print_r($data);
 		$this->load->view('inventory/printinventory',$data);
 		$this->load->view('templates/footer');		
 		}
