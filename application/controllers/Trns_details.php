@@ -25,9 +25,11 @@ class Trns_details extends CI_Controller{
 
 public function purch_add_details(){
 		
-	if (time()<=strtotime($this->session->csdate) or time()>=strtotime($this->session->cedate)):	
-	die("Today's date is out of range"."<a href =".site_url('welcome/home')."> go home</a>");
-	endif;	
+		//strtotime for a date refers to beginning of the date, i.e. midnight bet prev date and given date. So it is ok for startdate but for end date, we need to reach the end of the date
+		
+		if (time()<strtotime($this->session->csdate) or time()>strtotime(($this->session->cedate)." 24:0:0")):	
+		die("Today's date is out of range"."<a href =".site_url('welcome/home')."> go home</a>");
+		endif;	
 	
 	if (!isset($_POST)||empty($_POST)):
 		//unsubmitted
@@ -186,9 +188,12 @@ public function purch_add_details(){
 
 
 		public function sales_add_details(){
-		if (time()<=strtotime($this->session->csdate) or time()>=strtotime($this->session->cedate)):	
+		//strtotime for a date refers to beginning of the date, i.e. midnight bet prev date and given date. So it is ok for startdate but for end date, we need to reach the end of the date
+		
+		if (time()<strtotime($this->session->csdate) or time()>strtotime(($this->session->cedate)." 24:0:0")):	
 		die("Today's date is out of range"."<a href =".site_url('welcome/home')."> go home</a>");
 		endif;	
+		
 		//unsubmitted
 		if (!isset($_POST)||empty($_POST)):			
 			
@@ -210,6 +215,13 @@ public function purch_add_details(){
 			$data['invent'] = $inventory;
 			$this->session->invent = $inventory;
 			$data['details']=$this->session->sales_details=array();
+			/*echo time();
+			echo "<br>";
+			echo strtotime(($this->session->cedate)." 24:0:0");
+			echo "<br>";
+			echo date("d-m-Y H:i:s", strtotime(($this->session->cedate)." 24:0:0"));
+			echo "<br>";
+			echo $this->session->cedate;*/
 			$this->load->view('templates/header');
 			$this->load->view('trns_details/sales_add_details',$data);
 			//$this->load->view('templates/footer');	
