@@ -192,7 +192,7 @@ public function purch_add_details(){
 		
 		if (time()<strtotime($this->session->csdate) or time()>strtotime(($this->session->cedate)." 24:0:0")):	
 		die("Today's date is out of range"."<a href =".site_url('welcome/home')."> go home</a>");
-		endif;	
+		endif;
 		
 		//unsubmitted
 		if (!isset($_POST)||empty($_POST)):			
