@@ -27,6 +27,9 @@ $pdf->Cell(20,5,'Rate',1,0,'C');
 $pdf->Cell(20,5,'Quantity',1,1,'C');
 foreach ($podetails as $pod):
 $pdf->Cell(150,5,$pod['title'],1,0,'L');
+if(0==$pod['rate']):
+$pod['rate']='';
+endif;
 $pdf->Cell(20,5,$pod['rate'],1,0,'R');
 $pdf->Cell(20,5,$pod['quantity'],1,1,'R');
 

@@ -31,14 +31,28 @@ class Po_summary_model extends CI_Model{
 
 	public function get_items($partyid){
 		//called by po_details/add, po_details/edit
+		
+		/*
 		$this->db->select('item.*, inventory.myprice, sum(inventory.clbal) as clbal');
 		$this->db->from('item');
 		$this->db->join('inventory', 'item.id = inventory.item_id');
 		$this->db->where('item.party_id',$partyid);
 		$this->db->group_by('inventory.item_id, inventory.myprice');
 		$sql = $this->db->get();
-		return $sql->result_array();
+		return $sql->result_array();*/
+		$sql="select item.*, inv.myprice, inv.clbal from
+		item left join
+		(select inventory.myprice, inventory.item_id, sum(inventory.clbal) as clbal from inventory group by item_id, myprice) as inv
+		on item.id=inv.item_id
+		where item.party_id=?";
+		return $this->db->query($sql, array($partyid))->result_array();
 		}
+
+
+
+
+
+
 
 	public function add($arr){
 		//called by po_details/add

@@ -33,6 +33,9 @@ $i=0;
 foreach ($items as $item):
 $rate=number_format($item['myprice']+($item['myprice']*$item['gstrate']/100),2,".",",");
 $added=0;
+if(0==$rate):
+$rate='';
+endif;
 foreach ($addeditems as $aitem):
   if ($aitem['item_id']==$item['id'] and $rate==$aitem['rate']):
  echo "<tr><td>$item[id]</td><td>$item[title]</td><td>$rate</td><td>$item[clbal]</td><td><input type = number name = podet[$i][quantity] value = $aitem[quantity]></td></tr>";
