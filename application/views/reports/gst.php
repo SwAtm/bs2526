@@ -147,8 +147,8 @@ $pdf->cell(276,5,'No B2C Small Invoices',0,1,'C');
 else:
 $pdf->setX(62);
 $pdf->cell(35,5,'Place of Supply',1,0,'L');
+$pdf->cell(20,5,'Taxable Amt',1,0,'L');
 $pdf->cell(16,5,'Rate of Tax',1,0,'L');
-$pdf->cell(20,5,'Taxable Amount',1,0,'L');
 $pdf->cell(20,5,'IGST',1,0,'L');
 $pdf->cell(20,5,'CGST',1,0,'L');
 $pdf->cell(20,5,'SGST',1,0,'L');
@@ -157,8 +157,8 @@ $tamount=$igst=$cgst=$sgst=$amount=$damount=0;
 foreach ($det['b2cs'] as $de):
 		$pdf->setX(62);
 		$pdf->cell(35,5,$de['party_state'],1,0,'L');
-		$pdf->cell(16,5,$de['gst_rate'],1,0,'L');
 		$pdf->cell(20,5,number_format($de['taxable'],2,'.',','),1,0,'R');
+		$pdf->cell(16,5,$de['gst_rate'],1,0,'L');
 		$pdf->cell(20,5,number_format($de['igst'],2,'.',','),1,0,'R');		
 		$pdf->cell(20,5,number_format($de['cgst'],2,'.',','),1,0,'R');
 		$pdf->cell(20,5,number_format($de['sgst'],2,'.',','),1,0,'R');
@@ -174,8 +174,8 @@ foreach ($det['b2cs'] as $de):
 			$pdf->AddPage();
 			$pdf->setX(62);
 			$pdf->cell(35,5,'Place of Supply',1,0,'L');
+			$pdf->cell(20,5,'Taxable Amnt',1,0,'L');
 			$pdf->cell(16,5,'Rate of Tax',1,0,'L');
-			$pdf->cell(20,5,'Taxable Amount',1,0,'L');
 			$pdf->cell(20,5,'IGST',1,0,'L');
 			$pdf->cell(20,5,'CGST',1,0,'L');
 			$pdf->cell(20,5,'SGST',1,0,'L');
@@ -185,9 +185,9 @@ endforeach;
 	$pdf->setX(62);
 	$pdf->cell(35,5,'Total',1,0,'C');
 	//$pdf->cell(16,5,'',1,0,'R');
-	$pdf->cell(16,5,'',1,0,'R');
 	$pdf->cell(20,5,number_format($tamount,2,'.',','),1,0,'R');
-		$pdf->cell(20,5,number_format($igst,2,'.',','),1,0,'R');
+	$pdf->cell(16,5,'',1,0,'R');
+	$pdf->cell(20,5,number_format($igst,2,'.',','),1,0,'R');
 	$pdf->cell(20,5,number_format($cgst,2,'.',','),1,0,'R');
 	$pdf->cell(20,5,number_format($sgst,2,'.',','),1,0,'R');
 	$pdf->cell(20,5,number_format($amount,2,'.',','),1,1,'R');
@@ -280,10 +280,10 @@ endforeach;
 	$pdf->cell(20,5,number_format($cgst,2,'.',','),1,0,'R');
 	$pdf->cell(20,5,number_format($sgst,2,'.',','),1,0,'R');
 	$pdf->cell(20,5,number_format($amount,2,'.',','),1,1,'R');
-
+	
 
 //Documents
-if ($pdf->getY()>150):
+if ($pdf->getY()>140):
 		//$pdf->cell(15,5,$pdf->getY(),1,1,'R');
 			$pdf->AddPage();
 endif;

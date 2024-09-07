@@ -25,7 +25,7 @@ tfoot {
 <?php
 //print_r($id);
 //echo "<br>";
-print_r($items);
+//print_r($items);
 echo "<br>";
 
 echo "<form method = POST action = ".site_url('po_details/add').">";
