@@ -31,7 +31,7 @@ echo "<th>Item id</th><th>Name</th><th>Rate</th><th>CL Bal</th><th>Order</th>";
 $i=0;
 
 foreach ($items as $item):
-$rate=number_format($item['myprice']+($item['myprice']*$item['gstrate']/100),2,".",",");
+$rate=$item['myprice']+($item['myprice']*$item['gstrate']/100);
 $added=0;
 if(0==$rate):
 $rate='';
