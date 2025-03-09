@@ -257,7 +257,16 @@
 			endforeach;
 			//$data['det']['outward']=$this->Trns_details_model->outward($data['frdate'], $data['todate']);
 			$data['series']=$ser;
-			
+
+			//export hsn data in csv
+			$hsncsv=fopen(SAVEPATH.'hsn.csv', 'w');
+			fputcsv($hsncsv, array('hsn','desc','uqc', 'qty','value','rate','taxable', 'igst', 'cgst', 'sgst','cess'));
+			foreach($data['det']['hsn'] as $d):
+				$arraytoadd=array($d['hsn'], '', 'PCS-PIECES', $d['quantity'],$d['taxable']+$d['igst']+$d['cgst']+$d['sgst'], $d['gst_rate'], $d['taxable'], $d['igst'], $d['cgst'], $d['sgst']);
+			fputcsv($hsncsv,$arraytoadd,  ',', '"', '');
+			endforeach;
+			fclose($hsncsv);
+	
 			$this->load->view('reports/gst', $data);
 		endif;
 		
