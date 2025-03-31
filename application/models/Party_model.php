@@ -6,7 +6,7 @@ class Party_model extends CI_Model{
 	}
 
 	public function getall(){
-	//called by trns_details/purch_complete_details, trns_details/sales_complete_details, trns_summary/summary_edit, trns_summary/trns_search, trns_details/ec
+	//called by trns_details/purch_complete_details, trns_details/sales_complete_details, trns_summary/summary_edit, trns_summary/trns_search, trns_details/ec, party_trans/add_ob
 	$sql=$this->db->select('*');
 	$sql=$this->db->from('party');
 	$sql=$this->db->get();

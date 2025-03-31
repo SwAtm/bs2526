@@ -75,6 +75,7 @@ endif;
         <ul class = "sub">
             <li><a href="<?php echo site_url('Party_trans/ledger')?>">Ledger</a></li>
             <li><a href="<?php echo site_url('Party_trans/transactions')?>">Party Transactions</a></li>
+            <!--<li><a href="<?php echo site_url('Party_trans/add_ob')?>">Add Opening Balance</a></li>-->
         </ul>
     </li>
 <?php
