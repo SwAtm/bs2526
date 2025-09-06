@@ -299,6 +299,7 @@ class Trns_details_model extends CI_Model{
 		series on series.series = ts.series
 		where
 		series.tran_type_name=\"Sales\" and
+		ts.party_status!=\"REGD\" and
 		td.gst_rate>0 and 
 		ts.date>=? and 
 		ts.date<=?

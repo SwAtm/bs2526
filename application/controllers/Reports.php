@@ -263,7 +263,7 @@
 			fputcsv($hsncsv, array('hsn','desc','uqc', 'qty','value','rate','taxable', 'igst', 'cgst', 'sgst','cess'));
 			foreach($data['det']['hsn'] as $d):
 				$arraytoadd=array($d['hsn'], '', 'PCS-PIECES', $d['quantity'],$d['taxable']+$d['igst']+$d['cgst']+$d['sgst'], $d['gst_rate'], $d['taxable'], $d['igst'], $d['cgst'], $d['sgst']);
-			fputcsv($hsncsv,$arraytoadd,  ',', '"', '');
+			fputcsv($hsncsv,$arraytoadd,  ',', '"', '\\');
 			endforeach;
 			fclose($hsncsv);
 	
