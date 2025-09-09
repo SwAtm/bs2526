@@ -237,5 +237,11 @@ class Inventory_model extends CI_Model{
 	$sql=$this->db->get();
 	return $sql->row_array()['invmyprice'];
 	}
-
+	
+	public function checkifexists($hsn){
+	//called by trns_details/hsnCheck
+	$this->db->where('hsn', $hsn);
+    return $this->db->count_all_results('inventory');	
+	
+	}
 }

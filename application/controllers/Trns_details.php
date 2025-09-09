@@ -1193,5 +1193,25 @@ public function purch_add_details(){
 			
 		endif;	
 		}
+		
+    public function hsnCheck()
+{
+	$this->output->enable_profiler(FALSE);
+    $this->output->set_content_type('application/json');
+
+    $hsn = $this->input->get('hsn', TRUE);
+
+    if (empty($hsn)):
+        $response = ["status" => "error", "message" => "HSN Code required"];
+    elseif ($this->Inventory_model->checkifexists($hsn) > 0):
+        $response = ["status" => "exists", "message" => "HSN Code exists"];
+    else:
+        $response = ["status" => "new", "message" => "New HSN Code. Pl validate"];
+    endif;
+
+    echo json_encode($response);
 }
+
+}
+
 ?>

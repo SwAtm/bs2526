@@ -77,11 +77,11 @@ foreach ($item as $key => $value) {
 <td><input type = number size = 15 name = quantity required value = 1></td>
 <td><input type = number size = 15 name = discount step = 0.01 placeholder = 0.00></td>
 <td><input type = number size = 15 name = cash_disc step = 0.01 placeholder = 0.00></td>
-<td><input type = text size = 4 maxlength = "8" minlength = "6"  name = hsn required></td>
+<td><input type = text size = 4 maxlength = "8" minlength = "6"  name = hsn id="hsn" required></td>
 <td><input type = number size = 15 name = gst_rate step = 0.25 id = gstrate required></td>
 <td><input type = submit name = add value = Add></td></tr>
 
-<tr><td input id = tname name = tname></td><td colspan = 3 align = center><input type = submit name =  complete id = complete formnovalidate="formnovalidate" value = 'Bill Over'></td>
+<tr><td input id = tname name = tname></td><td colspan=2 align = center id = "hsn_status" name = "hsn_status"></td><td><input type = submit name =  complete id = complete formnovalidate="formnovalidate" value = 'Bill Over'></td>
 <td colspan = 4 align = center><input type = submit name =  cancel id = cancel formnovalidate="formnovalidate" value = 'Cancel Bill'></td>
 </tr>
 <?php
@@ -101,31 +101,24 @@ echo "</table>";
 endif;
 
 ?>
-<!--
+
+
 <script>
-var searchhandle = document.querySelector('#search1');
-var searchvalue = searchhandle.value;
-searchhandle.onblur = function(){
-//var postData = new FormData();
-//postData.append('searchval', searchhandle.value);
+document.getElementById("hsn").addEventListener("blur", async function() {
+    const hsnCode = this.value.trim();
+    const resultBox = document.getElementById("hsn_status");
+    resultBox.textContent = "Checking…";
+	const response = await fetch("<?php echo site_url('Trns_details/hsnCheck'); ?>?hsn=" + encodeURIComponent(hsnCode));
+	const data = await response.json();
+	resultBox.textContent = data.message;
+	if (data.status === "exists") {
+            resultBox.style.color = "green";
+        } else if (data.status === "new") {
+            resultBox.style.color = "red";
+        } else {
+            resultBox.style.color = "orange"; // for "error" or fallback
+        }
 
-fetch('send_data', {
-    method: 'POST',
-    credentials: 'same-origin',
-    mode: 'same-origin',
-    headers: {
-        "Content-Type": "application/json"
-    },
-     body: JSON.stringify({searchval: searchhandle.value}),
- })
-	.then(response => response.json())
-	.then(json=>console.log(json))
-
-
-//fetch('send_data/'+searchhandle.value)
-  
-  //alert('hi');
-  }
-
+});
 </script>
--->
+
