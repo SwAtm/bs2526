@@ -237,7 +237,8 @@
 			$data['det']['b2cl']=$this->Trns_details_model->gstb2cl($data['frdate'], $data['todate']);
 			$data['det']['b2cs']=$this->Trns_details_model->gstb2cs($data['frdate'], $data['todate']);
 			$data['det']['nil']=$this->Trns_details_model->gstnil($data['frdate'], $data['todate']);
-			$data['det']['hsn']=$this->Trns_details_model->gsthsn($data['frdate'], $data['todate']);
+			$data['det']['hsnb2c']=$this->Trns_details_model->gsthsnb2c($data['frdate'], $data['todate']);
+			$data['det']['hsnb2b']=$this->Trns_details_model->gsthsnb2b($data['frdate'], $data['todate']);
 			$data['det']['gst32']=$this->Trns_details_model->gst32($data['frdate'], $data['todate']);
 			$data['det']['gstitc']=$this->Trns_details_model->gstitc($data['frdate'], $data['todate']);
 			$data['det']['gstnilinward']=$this->Trns_details_model->gstnilinward($data['frdate'], $data['todate']);
@@ -258,13 +259,24 @@
 			//$data['det']['outward']=$this->Trns_details_model->outward($data['frdate'], $data['todate']);
 			$data['series']=$ser;
 
-			//export hsn data in csv
-			$hsncsv=fopen(SAVEPATH.'hsn.csv', 'w');
+			//export hsn b2c data in csv
+			$hsncsv=fopen(SAVEPATH.'hsnb2c.csv', 'w');
 			fputcsv($hsncsv, array('hsn','desc','uqc', 'qty','value','rate','taxable', 'igst', 'cgst', 'sgst','cess'));
-			foreach($data['det']['hsn'] as $d):
+			foreach($data['det']['hsnb2c'] as $d):
 				$arraytoadd=array($d['hsn'], '', 'PCS-PIECES', $d['quantity'],$d['taxable']+$d['igst']+$d['cgst']+$d['sgst'], $d['gst_rate'], $d['taxable'], $d['igst'], $d['cgst'], $d['sgst']);
 			fputcsv($hsncsv,$arraytoadd,  ',', '"', '\\');
 			endforeach;
+			fclose($hsncsv);
+			
+			//export hsn b2b data in csv
+			$hsncsv=fopen(SAVEPATH.'hsnb2b.csv', 'w');
+			fputcsv($hsncsv, array('hsn','desc','uqc', 'qty','value','rate','taxable', 'igst', 'cgst', 'sgst','cess'));
+			if (count($data['det']['hsnb2b'])>0):
+				foreach($data['det']['hsnb2b'] as $d):
+					$arraytoadd=array($d['hsn'], '', 'PCS-PIECES', $d['quantity'],$d['taxable']+$d['igst']+$d['cgst']+$d['sgst'], $d['gst_rate'], $d['taxable'], $d['igst'], $d['cgst'], $d['sgst']);
+				fputcsv($hsncsv,$arraytoadd,  ',', '"', '\\');
+				endforeach;
+			endif;
 			fclose($hsncsv);
 	
 			$this->load->view('reports/gst', $data);

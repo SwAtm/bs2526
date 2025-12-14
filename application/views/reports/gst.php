@@ -228,8 +228,67 @@ $tnil_exe_sales=$ne['interrnil']+$ne['interunil']+$ne['intrarnil']+$ne['intrauni
 
 endforeach;
 
+//HSNB2B
 $pdf->ln(5);
-$pdf->cell(276,5,'HSN',0,1,'C');
+$pdf->cell(276,5,'HSNB2B',0,1,'C');
+$pdf->setX(50);
+$pdf->cell(35,5,'HSN Number',1,0,'L');
+$pdf->cell(20,5,'Quantity',1,0,'L');
+$pdf->cell(20,5,'Taxable Amount',1,0,'L');
+$pdf->cell(16,5,'Rate of Tax',1,0,'L');
+$pdf->cell(20,5,'IGST',1,0,'L');
+$pdf->cell(20,5,'CGST',1,0,'L');
+$pdf->cell(20,5,'SGST',1,0,'L');
+$pdf->cell(20,5,'TOTAL',1,1,'L');
+$btamount=$bigst=$bcgst=$bsgst=$bamount=$bdamount=0;
+foreach ($det['hsnb2b'] as $de):
+		$pdf->setX(50);
+		$pdf->cell(35,5,$de['hsn'],1,0,'L');
+		$pdf->cell(20,5,$de['quantity'],1,0,'L');
+		$pdf->cell(20,5,number_format($de['taxable'],2,'.',','),1,0,'R');
+		$pdf->cell(16,5,$de['gst_rate'],1,0,'L');
+		$pdf->cell(20,5,number_format($de['igst'],2,'.',','),1,0,'R');
+		$pdf->cell(20,5,number_format($de['cgst'],2,'.',','),1,0,'R');
+		$pdf->cell(20,5,number_format($de['sgst'],2,'.',','),1,0,'R');
+		$bdamount=$de['taxable']+$de['igst']+$de['cgst']+$de['sgst'];
+		$pdf->cell(20,5,number_format($bdamount,2,'.',','),1,1,'R');
+		$btamount+=$de['taxable'];
+		$bcgst+=$de['cgst'];
+		$bsgst+=$de['sgst'];
+		$bigst+=$de['igst'];
+		$bamount+=$bdamount;
+		if ($pdf->getY()>180):
+		//$pdf->cell(15,5,$pdf->getY(),1,1,'R');
+			$pdf->AddPage();
+			$pdf->cell(276,5,'HSNB2B',0,1,'C');
+			$pdf->setX(50);
+			$pdf->cell(35,5,'HSN Number',1,0,'L');
+			$pdf->cell(20,5,'Quantity',1,0,'L');
+			$pdf->cell(20,5,'Taxable Amount',1,0,'L');
+			$pdf->cell(16,5,'Rate of Tax',1,0,'L');
+			$pdf->cell(20,5,'IGST',1,0,'L');
+			$pdf->cell(20,5,'CGST',1,0,'L');
+			$pdf->cell(20,5,'SGST',1,0,'L');
+			$pdf->cell(20,5,'TOTAL',1,1,'L');;
+
+		endif;
+endforeach;
+	$pdf->setX(50);
+	$pdf->cell(55,5,'Total',1,0,'C');
+	$pdf->cell(20,5,number_format($btamount,2,'.',','),1,0,'R');
+	$pdf->cell(16,5,'',1,0,'R');
+	$pdf->cell(20,5,number_format($bigst,2,'.',','),1,0,'R');
+	$pdf->cell(20,5,number_format($bcgst,2,'.',','),1,0,'R');
+	$pdf->cell(20,5,number_format($bsgst,2,'.',','),1,0,'R');
+	$pdf->cell(20,5,number_format($bamount,2,'.',','),1,1,'R');
+
+
+
+
+
+//HSNB2C
+$pdf->ln(5);
+$pdf->cell(276,5,'HSNB2C',0,1,'C');
 $pdf->setX(50);
 $pdf->cell(35,5,'HSN Number',1,0,'L');
 $pdf->cell(20,5,'Quantity',1,0,'L');
@@ -240,7 +299,7 @@ $pdf->cell(20,5,'CGST',1,0,'L');
 $pdf->cell(20,5,'SGST',1,0,'L');
 $pdf->cell(20,5,'TOTAL',1,1,'L');
 $tamount=$igst=$cgst=$sgst=$amount=$damount=0;
-foreach ($det['hsn'] as $de):
+foreach ($det['hsnb2c'] as $de):
 		$pdf->setX(50);
 		$pdf->cell(35,5,$de['hsn'],1,0,'L');
 		$pdf->cell(20,5,$de['quantity'],1,0,'L');
@@ -259,7 +318,7 @@ foreach ($det['hsn'] as $de):
 		if ($pdf->getY()>180):
 		//$pdf->cell(15,5,$pdf->getY(),1,1,'R');
 			$pdf->AddPage();
-			$pdf->cell(276,5,'HSN',0,1,'C');
+			$pdf->cell(276,5,'HSNB2C',0,1,'C');
 			$pdf->setX(50);
 			$pdf->cell(35,5,'HSN Number',1,0,'L');
 			$pdf->cell(20,5,'Quantity',1,0,'L');
@@ -314,11 +373,11 @@ if ($pdf->getY()>175):
 endif;
 $pdf->setX(50);
 $pdf->cell(35,5,'Total Sales: ',1,0,'L');
-$pdf->cell(35,5,number_format($tamount+$tnil_exe_sales,2,'.',','),1,0,'L');
+$pdf->cell(35,5,number_format($btamount+$tamount+$tnil_exe_sales,2,'.',','),1,0,'L');
 $pdf->cell(35,5,'IGST: ',1,0,'L');
-$pdf->cell(35,5,number_format($igst,2,'.',','),1,0,'L');
+$pdf->cell(35,5,number_format($bigst+$igst,2,'.',','),1,0,'L');
 $pdf->cell(35,5,'CGST/SGST: ',1,0,'L');
-$pdf->cell(35,5,number_format($cgst,2,'.',','),1,1,'L');
+$pdf->cell(35,5,number_format($bcgst+$cgst,2,'.',','),1,1,'L');
 
 
 
@@ -342,11 +401,11 @@ $pdf->cell(20,5,'SGST',1,0,'L');
 $pdf->cell(20,5,'TOTAL',1,1,'L');
 $pdf->setX(62);
 $pdf->cell(50,5,'Taxable Sales',1,0,'C');
-$pdf->cell(20,5,number_format($tamount,2,'.',','),1,0,'R');
-$pdf->cell(20,5,number_format($igst,2,'.',','),1,0,'R');
-$pdf->cell(20,5,number_format($cgst,2,'.',','),1,0,'R');
-$pdf->cell(20,5,number_format($sgst,2,'.',','),1,0,'R');
-$pdf->cell(20,5,number_format($amount,2,'.',','),1,1,'R');
+$pdf->cell(20,5,number_format($tamount+$btamount,2,'.',','),1,0,'R');
+$pdf->cell(20,5,number_format($igst+$bigst,2,'.',','),1,0,'R');
+$pdf->cell(20,5,number_format($cgst+$bcgst,2,'.',','),1,0,'R');
+$pdf->cell(20,5,number_format($sgst+$bsgst,2,'.',','),1,0,'R');
+$pdf->cell(20,5,number_format($bamount+$amount,2,'.',','),1,1,'R');
 $pdf->setX(62);
 $pdf->cell(50,5,'Nil Rated/Exempted Sales',1,0,'C');
 $pdf->cell(20,5,number_format($ne['interrnil']+$ne['interunil']+$ne['intrarnil']+$ne['intraunil']+$ne['interrexe']+$ne['interuexe']+$ne['intrarexe']+$ne['intrauexe'],2,'.',','),1,0,'R');

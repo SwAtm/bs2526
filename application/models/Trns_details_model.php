@@ -222,7 +222,7 @@ class Trns_details_model extends CI_Model{
 		ts.date>=? and
 		ts.date<=?
 		group by ts.series, ts.no
-		having tamount>=250000) as tsp
+		having tamount>100000) as tsp
 		join
 		(select td.gst_rate, td.trns_summary_id, round(sum( (((td.rate-cash_disc)*td.quantity)-(((td.rate-cash_disc)*td.quantity)*discount/100))/(100+td.gst_rate)*100) ,2) as taxable, round(sum((((td.rate-cash_disc)*td.quantity)-(((td.rate-cash_disc)*td.quantity)*discount/100))/(100+td.gst_rate)*td.gst_rate),2) as igst
 		from trns_details as td
@@ -248,7 +248,7 @@ class Trns_details_model extends CI_Model{
 		series.tran_type_name=\"Sales\" 
 		group by ts.id
 		HAVING not (ts.party_state_io=\"O\" and
-		tamount>=250000)) as tsp
+		tamount>100000)) as tsp
 		join
 		(select td.gst_rate, td.trns_summary_id, round(sum( (((td.rate-cash_disc)*td.quantity)-(((td.rate-cash_disc)*td.quantity)*discount/100))/(100+td.gst_rate)*100) ,2) as taxable, 
 		round(sum(if(ts.party_state_io=\"I\", (((td.rate-cash_disc)*td.quantity)-(((td.rate-cash_disc)*td.quantity)*discount/100))/(100+td.gst_rate)*td.gst_rate,0)),2)/2 as cgst,
@@ -287,7 +287,7 @@ class Trns_details_model extends CI_Model{
 	
 	}
 	
-		public function gsthsn($frdate, $todate){
+		public function gsthsnb2c($frdate, $todate){
 		$sql = "select 	hsn, gst_rate, 
 		sum(quantity) as quantity,
 		round(sum( (((td.rate-cash_disc)*td.quantity)-(((td.rate-cash_disc)*td.quantity)*discount/100))/(100+td.gst_rate)*100) ,2) as taxable, 
@@ -306,6 +306,29 @@ class Trns_details_model extends CI_Model{
 		group by hsn, gst_rate";	
 		return $this->db->query($sql, array ($frdate, $todate))->result_array();		
 	}
+		
+		public function gsthsnb2b($frdate, $todate){
+		$sql = "select 	hsn, gst_rate, 
+		sum(quantity) as quantity,
+		round(sum( (((td.rate-cash_disc)*td.quantity)-(((td.rate-cash_disc)*td.quantity)*discount/100))/(100+td.gst_rate)*100) ,2) as taxable, 
+		round(sum(if(ts.party_state_io=\"I\", (((td.rate-cash_disc)*td.quantity)-(((td.rate-cash_disc)*td.quantity)*discount/100))/(100+td.gst_rate)*td.gst_rate,0)),2)/2 as cgst,
+		round(sum(if(ts.party_state_io=\"I\", (((td.rate-cash_disc)*td.quantity)-(((td.rate-cash_disc)*td.quantity)*discount/100))/(100+td.gst_rate)*td.gst_rate,0)),2)/2 as sgst,
+		round(sum(if(ts.party_state_io=\"O\", (((td.rate-cash_disc)*td.quantity)-(((td.rate-cash_disc)*td.quantity)*discount/100))/(100+td.gst_rate)*td.gst_rate,0)),2) as igst from
+		trns_details as td join
+		trns_summary as ts on td.trns_summary_id=ts.id join
+		series on series.series = ts.series
+		where
+		series.tran_type_name=\"Sales\" and
+		ts.party_status=\"REGD\" and
+		td.gst_rate>0 and 
+		ts.date>=? and 
+		ts.date<=?
+		group by hsn, gst_rate";	
+		return $this->db->query($sql, array ($frdate, $todate))->result_array();		
+	}
+		
+		
+		
 		
 		public function gst32($frdate, $todate){
 		//called by reports/gstreports
